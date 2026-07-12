@@ -1,0 +1,128 @@
+/**
+ * Inflow UI - Semantic CSS Classes
+ *
+ * These classes provide structural styling only.
+ * No colors, no design-system-specific properties.
+ * Override these in your application theme to match your design system.
+ */
+
+/* Container wrappers */
+.inflow-ui {
+  display: flex;
+  flex-direction: column;
+}
+
+.inflow-control {
+  /* Control wrapper - override with your design system classes */
+}
+
+.inflow-layout {
+  /* Layout wrapper - override with your design system classes */
+}
+
+.inflow-control-inner,
+.inflow-layout-inner {
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+}
+
+/* Action elements */
+.inflow-action {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.inflow-action-button {
+  cursor: pointer;
+  border: none;
+  background: transparent;
+  padding: 0.25rem 0.5rem;
+  display: inline-flex;
+  align-items: center;
+  gap: 0.25rem;
+}
+
+.inflow-button {
+  /* Text button variant - override with your design system classes */
+}
+
+.inflow-icon-button {
+  /* Icon-only button variant - override with your design system classes */
+}
+
+.inflow-action-icon {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+}
+
+/* Position modifiers */
+.inflow-position-above {
+  order: -1;
+}
+
+.inflow-position-below {
+  order: 1;
+}
+
+.inflow-position-prepend {
+  /* Prepended to the control/layout inner container */
+}
+
+.inflow-position-append {
+  /* Appended to the control/layout inner container */
+}
+
+/* OneOf renderer */
+.inflow-oneof {
+  display: flex;
+  flex-direction: column;
+  gap: 0.5rem;
+}
+
+.inflow-oneof-control {
+  display: flex;
+  flex-direction: column;
+  gap: 0.25rem;
+  margin-bottom: 0.5rem;
+}
+
+.inflow-oneof-label {
+  display: block;
+  font-size: 12px;
+  font-weight: 600;
+  color: var(--text-h, #08060d);
+}
+
+.inflow-oneof-select {
+  width: 100%;
+  padding: 6px 8px;
+  font-size: 12px;
+  border: 1px solid var(--border, #e5e4e7);
+  border-radius: 6px;
+  background: var(--bg, #fff);
+  color: var(--text-h, #08060d);
+  outline: none;
+  transition: border-color 0.2s, box-shadow 0.2s;
+  box-sizing: border-box;
+  font-family: inherit;
+  line-height: 1.4;
+}
+
+.inflow-oneof-select:focus {
+  border-color: var(--accent, #aa3bff);
+  box-shadow: 0 0 0 2px var(--accent-bg, rgba(170, 59, 255, 0.2));
+}
+
+.inflow-oneof-error {
+  font-size: 11px;
+  color: #ef4444;
+  margin-top: 2px;
+}
+
+.inflow-required {
+  color: #ef4444;
+  margin-left: 2px;
+}

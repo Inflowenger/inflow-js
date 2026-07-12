@@ -1,0 +1,52 @@
+{
+  "name": "@inflowenger/inflow-ui",
+  "version": "0.1.0",
+  "description": "Reusable Vue 3 + TypeScript extension library for JSON Forms with custom x-inflow-ui support",
+  "type": "module",
+  "main": "./dist/index.cjs",
+  "module": "./dist/index.js",
+  "types": "./dist/index.d.ts",
+  "exports": {
+    ".": {
+      "import": "./dist/index.js",
+      "require": "./dist/index.cjs",
+      "types": "./dist/index.d.ts"
+    },
+    "./style.css": "./dist/style.css"
+  },
+  "files": [
+    "dist"
+  ],
+  "scripts": {
+    "build": "vue-tsc --noEmit && vite build",
+    "dev": "vite build --watch"
+  },
+  "peerDependencies": {
+    "vue": "^3.3.0",
+    "@jsonforms/core": "^3.0.0",
+    "@jsonforms/vue": "^3.0.0"
+  },
+  "devDependencies": {
+    "@vitejs/plugin-vue": "^5.0.0",
+    "typescript": "^5.4.0",
+    "vite": "^5.0.0",
+    "vite-plugin-dts": "^3.9.0",
+    "vue": "^3.4.0",
+    "vue-tsc": "^2.0.0",
+    "@jsonforms/core": "^3.8.0",
+    "@jsonforms/vue": "^3.8.0"
+  },
+  "keywords": [
+    "jsonforms",
+    "vue3",
+    "typescript",
+    "form",
+    "ui-schema",
+    "inflow"
+  ],
+  "license": "MIT",
+  "repository": {
+    "type": "git",
+    "url": "https://github.com/Inflowenger/ifeng-admin.git"
+  }
+}
