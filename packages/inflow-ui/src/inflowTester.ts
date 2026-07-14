@@ -1,4 +1,4 @@
-import { rankWith, and, isControl, isEnumControl, type RankedTester, type UISchemaElement } from '@jsonforms/core'
+import { rankWith, and, isControl, type RankedTester, type UISchemaElement } from '@jsonforms/core'
 
 /**
  * Check whether a UI schema element has x-inflow-ui defined.
@@ -40,16 +40,15 @@ export const inflowLayoutTester: RankedTester = rankWith(
 )
 
 /**
- * Tester for all enum controls so we can use a v-model select instead of the vanilla one.
- * Rank 3 beats the vanilla EnumControlRenderer (rank 2).
- */
-export const inflowEnumTester: RankedTester = rankWith(3, isEnumControl)
-
-/**
  * All Inflow UI testers.
  * Used to filter out Inflow renderers when delegating to original renderers.
+ *
+ * Note: Inflow only registers renderers that are strictly opt-in via the
+ * `x-inflow-ui` tag. Enum and oneOf controls are intentionally left to the
+ * host's renderer set (e.g. vanilla) so the package stays loosely coupled and
+ * compatible across JSON Forms versions.
  */
-export const inflowTesters: RankedTester[] = [inflowControlTester, inflowLayoutTester, inflowEnumTester]
+export const inflowTesters: RankedTester[] = [inflowControlTester, inflowLayoutTester]
 
 /**
  * Convenience export defaulting to the control tester.

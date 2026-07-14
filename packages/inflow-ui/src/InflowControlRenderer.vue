@@ -16,6 +16,8 @@ const inflowUi = computed<InflowUiExtension | undefined>(() => {
   return (control.value.uischema as any)['x-inflow-ui']
 })
 
+// Drop Inflow's own testers so the inner DispatchRenderer resolves the original
+// (vanilla) renderer for this control instead of recursing back into us.
 const filteredRenderers = computed(() => {
   return (control.value.renderers || []).filter(
     (r) => r.tester !== inflowControlTester && r.tester !== inflowLayoutTester
@@ -77,16 +79,25 @@ const containerClasses = computed(() => {
         />
       </template>
 
-      <!-- Original JSON Forms control -->
+      <!--
+        Re-dispatch the ORIGINAL control by forwarding the props we received
+        (props.path / props.schema / props.uischema …), NOT the computed
+        control.* values. A control composes its data path as
+        composeWithUi(uischema, path) = path + its own scope. control.path is
+        already the fully-composed path, so passing it here would compose the
+        scope a second time (e.g. connection.protocol -> connection.protocol.
+        connection.protocol), making the inner control read undefined and, for
+        an enum, render a blank <select>. Forwarding props.path keeps the inner
+        control identical to how JSON Forms would render it un-wrapped.
+      -->
       <DispatchRenderer
-        :schema="control.rootSchema"
-        :uischema="control.uischema"
-        :path="control.path"
-        :enabled="control.enabled"
-        :readonly="control.readonly"
+        :schema="props.schema"
+        :uischema="props.uischema"
+        :path="props.path"
+        :enabled="props.enabled"
         :renderers="filteredRenderers"
-        :cells="control.cells"
-        :config="control.config"
+        :cells="props.cells"
+        :config="props.config"
       />
 
       <!-- Append decorations -->
