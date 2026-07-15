@@ -1,0 +1,19 @@
+node_modules
+dist
+test-dist
+*.tsbuildinfo
+
+# Logs
+*.log
+npm-debug.log*
+pnpm-debug.log*
+
+# npm auth — never commit a token
+.npmrc.local
+
+# Editor / OS
+.idea
+.DS_Store
+.vscode/*
+!.vscode/extensions.json
+.claude

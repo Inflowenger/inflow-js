@@ -1,7 +1,7 @@
 {
-  "name": "@inflowenger/inflow-ui",
+  "name": "@inflowenger/plugin-form-builder",
   "version": "0.1.0",
-  "description": "Reusable Vue 3 + TypeScript extension library for JSON Forms with custom x-inflow-ui support",
+  "description": "Vue 3 + JSON Forms renderer for Inflow's x-inflow-ui schema extension — schema-driven forms with actions and buttons",
   "type": "module",
   "main": "./dist/index.cjs",
   "module": "./dist/index.js",
@@ -41,12 +41,21 @@
     "vue3",
     "typescript",
     "form",
+    "form-builder",
     "ui-schema",
     "inflow"
   ],
   "license": "MIT",
+  "publishConfig": {
+    "access": "public"
+  },
   "repository": {
     "type": "git",
-    "url": "https://github.com/Inflowenger/ifeng-admin.git"
+    "url": "git+https://github.com/Inflowenger/inflow-js.git",
+    "directory": "packages/plugin-form-builder"
+  },
+  "homepage": "https://github.com/Inflowenger/inflow-js/tree/master/packages/plugin-form-builder",
+  "bugs": {
+    "url": "https://github.com/Inflowenger/inflow-js/issues"
   }
 }

@@ -4,14 +4,15 @@ Turns the Inflow **process event stream** into flow movement and completion.
 
 The engine publishes an event per meaningful thing that happens while a flow runs. This is the consumer half of that contract — it answers *where is the process, which edges did it take, and did it finish?* Zero dependencies, no framework: drive it from a socket, a stored run, or a test.
 
-The wire format is specified in inflow-fusion [`docs/logs.md`](../../../inflow-fusion/docs/logs.md). Read that first if you're changing this.
+The wire format is specified in the `inflow-fusion` repo, `docs/logs.md`. Read that first if you're changing this — the producer is fractal-core's engine, and these types are only useful insofar as they match what it actually publishes.
 
 ## Install
 
-```jsonc
-// package.json
-{ "dependencies": { "@inflowenger/flow-trace": "workspace:*" } }
+```sh
+pnpm add @inflowenger/flow-trace
 ```
+
+No dependencies, no framework. Browser, Node, or a test.
 
 ## Use
 

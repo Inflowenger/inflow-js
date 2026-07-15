@@ -1,0 +1,63 @@
+# Publishes one package to the public npm registry when its tag is pushed.
+#
+#   git tag plugin-form-builder-v0.2.0   && git push origin plugin-form-builder-v0.2.0
+#   git tag flow-trace-v0.2.0  && git push origin flow-trace-v0.2.0
+#
+# The tag only selects which package to publish; the version that actually ships
+# is the one in its package.json. Bump and commit that first.
+#
+# Requires an NPM_TOKEN secret (automation token from npmjs.com) with publish
+# rights on the @inflowenger org.
+name: Publish
+
+on:
+  push:
+    tags:
+      - 'plugin-form-builder-v*'
+      - 'flow-trace-v*'
+
+jobs:
+  publish:
+    runs-on: ubuntu-latest
+    permissions:
+      contents: read
+      id-token: write # npm provenance
+
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Resolve package from tag
+        id: pkg
+        run: |
+          case "${GITHUB_REF_NAME}" in
+            plugin-form-builder-v*)  echo "name=@inflowenger/plugin-form-builder"  >> "$GITHUB_OUTPUT" ;;
+            flow-trace-v*) echo "name=@inflowenger/flow-trace" >> "$GITHUB_OUTPUT" ;;
+            *) echo "::error::Tag ${GITHUB_REF_NAME} does not map to a package"; exit 1 ;;
+          esac
+
+      - uses: pnpm/action-setup@v4
+
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 22
+          cache: pnpm
+          registry-url: https://registry.npmjs.org
+
+      - run: pnpm install --frozen-lockfile
+
+      - run: pnpm --filter ${{ steps.pkg.outputs.name }} build
+
+      # Fails loudly if the tag and the package.json version disagree, rather
+      # than publishing a version nobody asked for.
+      - name: Check tag matches package version
+        run: |
+          version=$(node -p "require('./packages/${GITHUB_REF_NAME%%-v*}/package.json').version")
+          tag_version="${GITHUB_REF_NAME##*-v}"
+          if [ "$version" != "$tag_version" ]; then
+            echo "::error::Tag says v$tag_version but package.json says $version"
+            exit 1
+          fi
+
+      - run: pnpm --filter ${{ steps.pkg.outputs.name }} publish --access public --no-git-checks --provenance
+        env:
+          NODE_AUTH_TOKEN: ${{ secrets.NPM_TOKEN }}
