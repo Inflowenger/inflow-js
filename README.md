@@ -25,6 +25,28 @@ Public packages on the npm registry — no token, no `.npmrc`, nothing to config
 pnpm add vue @jsonforms/core @jsonforms/vue
 ```
 
+## The lab
+
+Before reading any of the below, you can just run it. [`lab/`](lab) is a small Vue app in this repo that drives both packages by hand — no backend, no engine, no inspector.
+
+```sh
+pnpm install
+pnpm -r build                      # the lab consumes dist, so build first
+pnpm --filter @inflowenger/lab dev
+```
+
+| Page | Package | What it shows |
+|---|---|---|
+| **Form Preview** | plugin-form-builder | A schema / UI-schema pair edited live, rendered through the Inflow renderers, with every action call listed alongside what it saw and the patch it wrote. |
+| **Debug Enum** | plugin-form-builder | A field carrying `x-inflow-ui` side by side with the same field without it. They must behave identically. |
+| **Run Replay** | flow-trace | A captured engine run fed to a tracker one message at a time, with controls to reorder, drop from, and pollute the stream. |
+
+The lab consumes the packages through `workspace:*` — their built entrypoints, exactly as an installed app does — so it exercises the exports map, the types, and `style.css` rather than the source behind them. A packaging mistake shows up there instead of in your app.
+
+The `x-inflow-ui` contract has two edges that bite people, and both are easier to see than to read about: Form Preview's action log shows effects travelling through `updateData` and nothing coming back from the return value, and its Reload button patches leaf paths while leaving the rest of `connection` alone. Run Replay's toggles cover the parts of the event contract a clean run never reaches — reordering, a real gap, and traffic that isn't an event at all.
+
+Details, and how to add a page: [`lab/README.md`](lab/README.md).
+
 ## @inflowenger/plugin-form-builder
 
 JSON Forms renders a form from a schema. Inflow's schemas carry an extra key, `x-inflow-ui`, describing behaviour a plain form has no vocabulary for — *put a button on this field, and run this action when it's clicked*. This package is the renderer that understands that key.
@@ -124,6 +146,8 @@ Two things bite people here:
 
 Actions are resolved by name from the registry, so a schema can never invoke anything you didn't explicitly hand the plugin. A missing name is inert rather than fatal.
 
+All three are live on the lab's Form Preview page — the action log prints each call's `ctx.data` and its patch, the Jira sample's Reload button patches leaves under `connection` while port and TLS survive, and the "Unknown action" sample names something the host never registered.
+
 ## @inflowenger/flow-trace
 
 The Inflow engine publishes an event per meaningful thing that happens while a flow runs. This is the consumer half: feed it the stream, get movement and completion.
@@ -151,19 +175,24 @@ Full event table, ordering rules, and the gap/reorder semantics: [`packages/flow
 - **Order comes from `seq`, never `ts`.** The engine emits many events per millisecond, so timestamps collide and cannot sort anything.
 - **State is bounded by the graph, not the run.** A loop can hit a node thousands of times; `nodes`/`edges` keep one entry per identity with counters, so nothing accumulates per pass. Events still fire every pass, which is what animation needs.
 
+The lab's Run Replay page is this section with a play button: the same captured run, stepped one `ingest` at a time, with node keys, edge counters, and the emitted feed side by side. Its toggles reorder the stream, drop an event, and mix in traffic that isn't an event — the cases you would otherwise only meet in production.
+
 ## Working on this repo
 
-pnpm workspace, `packages/*`.
+pnpm workspace: `packages/*`, plus [`lab/`](lab) — a playground app that consumes both packages and is never published.
 
 ```sh
 pnpm install
-pnpm -r build          # both packages
+pnpm -r build          # both packages, then the lab
 pnpm --filter @inflowenger/flow-trace test
+pnpm --filter @inflowenger/lab dev
 ```
 
 `flow-trace` builds with `tsc`; its tests run on `node:test` against `test/fixtures/real-run.jsonl` — an actual captured engine run covering a contract branch, a plugin failure, a GoTo across flows, and a loop. Extend the fixture rather than hand-writing events; hand-written events drift from what the engine really emits.
 
 `plugin-form-builder` builds with Vite in library mode. Vue and JSON Forms are `peerDependencies` and stay external — the consuming app owns those, and bundling a second copy of Vue breaks reactivity in ways that are miserable to debug.
+
+The lab is the first place to try a change: leave `pnpm --filter <pkg> dev` running to rebuild on save, and the lab picks the new `dist` up. It renders both packages against data that ships with the repo, so a regression is visible without wiring anything up. `pnpm -r build` builds it too, which means CI typechecks the packages against a real consumer on every push.
 
 To try a change against a real app before publishing, link it:
 

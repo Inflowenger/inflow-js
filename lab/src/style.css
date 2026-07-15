@@ -1,0 +1,584 @@
+*,
+*::before,
+*::after {
+  box-sizing: border-box;
+}
+
+:root {
+  --text: #6b6375;
+  --text-h: #08060d;
+  --bg: #fff;
+  --bg-soft: #faf9fb;
+  --border: #e5e4e7;
+  --code-bg: #f4f3ec;
+  --accent: #aa3bff;
+  --accent-bg: rgba(170, 59, 255, 0.1);
+  --accent-border: rgba(170, 59, 255, 0.5);
+  --ok: #16a34a;
+  --ok-bg: rgba(22, 163, 74, 0.12);
+  --warn: #d97706;
+  --warn-bg: rgba(217, 119, 6, 0.12);
+  --err: #dc2626;
+  --err-bg: rgba(220, 38, 38, 0.12);
+  --shadow: rgba(0, 0, 0, 0.1) 0 10px 15px -3px, rgba(0, 0, 0, 0.05) 0 4px 6px -2px;
+
+  --sans: system-ui, 'Segoe UI', Roboto, sans-serif;
+  --mono: ui-monospace, Consolas, monospace;
+
+  font: 15px/145% var(--sans);
+  color-scheme: light dark;
+  color: var(--text);
+  background: var(--bg);
+  -webkit-font-smoothing: antialiased;
+}
+
+@media (prefers-color-scheme: dark) {
+  :root {
+    --text: #9ca3af;
+    --text-h: #f3f4f6;
+    --bg: #16171d;
+    --bg-soft: #1b1c23;
+    --border: #2e303a;
+    --code-bg: #1f2028;
+    --accent: #c084fc;
+    --accent-bg: rgba(192, 132, 252, 0.15);
+    --accent-border: rgba(192, 132, 252, 0.5);
+    --ok: #4ade80;
+    --ok-bg: rgba(74, 222, 128, 0.15);
+    --warn: #fbbf24;
+    --warn-bg: rgba(251, 191, 36, 0.15);
+    --err: #f87171;
+    --err-bg: rgba(248, 113, 113, 0.15);
+    --shadow: rgba(0, 0, 0, 0.4) 0 10px 15px -3px, rgba(0, 0, 0, 0.25) 0 4px 6px -2px;
+  }
+}
+
+body {
+  margin: 0;
+}
+
+/* ---------------------------------------------------------------------------
+   Lab shell
+   --------------------------------------------------------------------------- */
+.lab {
+  display: flex;
+  min-height: 100svh;
+}
+
+.lab-nav {
+  flex: 0 0 220px;
+  border-right: 1px solid var(--border);
+  padding: 20px 14px;
+  background: var(--bg-soft);
+}
+
+.lab-brand {
+  font-size: 14px;
+  font-weight: 700;
+  color: var(--text-h);
+  margin-bottom: 4px;
+}
+
+.lab-brand-sub {
+  font-size: 11px;
+  color: var(--text);
+  margin-bottom: 20px;
+}
+
+.lab-nav-group {
+  font-size: 10px;
+  font-weight: 700;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+  color: var(--text);
+  margin: 18px 0 6px 8px;
+}
+
+.lab-nav a {
+  display: block;
+  padding: 7px 10px;
+  border-radius: 6px;
+  font-size: 13px;
+  font-weight: 600;
+  color: var(--text);
+  text-decoration: none;
+  transition: background 0.15s, color 0.15s;
+}
+
+.lab-nav a:hover {
+  color: var(--accent);
+  background: var(--accent-bg);
+}
+
+.lab-nav a.router-link-active {
+  color: var(--accent);
+  background: var(--accent-bg);
+}
+
+.lab-main {
+  flex: 1;
+  min-width: 0;
+  padding: 24px 28px;
+}
+
+.page-head {
+  margin-bottom: 20px;
+}
+
+.page-head h1 {
+  margin: 0 0 6px;
+  font-size: 20px;
+  font-weight: 700;
+  color: var(--text-h);
+}
+
+.page-head p {
+  margin: 0;
+  max-width: 70ch;
+  font-size: 13px;
+  line-height: 1.6;
+}
+
+.card {
+  border: 1px solid var(--border);
+  border-radius: 10px;
+  padding: 16px;
+  background: var(--bg);
+  margin-bottom: 16px;
+}
+
+.card-title {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  font-size: 13px;
+  font-weight: 700;
+  color: var(--text-h);
+  margin-bottom: 12px;
+}
+
+.grid-2 {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(340px, 1fr));
+  gap: 16px;
+}
+
+.row {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  flex-wrap: wrap;
+}
+
+.spacer {
+  flex: 1;
+}
+
+.hint {
+  font-size: 11px;
+  color: var(--text);
+  line-height: 1.5;
+}
+
+/* ---------------------------------------------------------------------------
+   Controls
+   --------------------------------------------------------------------------- */
+.btn {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  padding: 6px 12px;
+  border: 1px solid var(--border);
+  border-radius: 6px;
+  background: var(--bg);
+  color: var(--text-h);
+  font-family: inherit;
+  font-size: 12px;
+  font-weight: 600;
+  cursor: pointer;
+  transition: border-color 0.15s, color 0.15s;
+}
+
+.btn:hover:not(:disabled) {
+  border-color: var(--accent);
+  color: var(--accent);
+}
+
+.btn:disabled {
+  opacity: 0.4;
+  cursor: not-allowed;
+}
+
+.btn.primary {
+  background: var(--accent-bg);
+  border-color: var(--accent-border);
+  color: var(--accent);
+}
+
+.check {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  font-size: 12px;
+  cursor: pointer;
+}
+
+.check input {
+  accent-color: var(--accent);
+}
+
+select.lab-select {
+  padding: 5px 8px;
+  border: 1px solid var(--border);
+  border-radius: 6px;
+  background: var(--bg);
+  color: var(--text-h);
+  font-family: inherit;
+  font-size: 12px;
+}
+
+.editor {
+  width: 100%;
+  min-height: 260px;
+  padding: 10px 12px;
+  border: 1px solid var(--border);
+  border-radius: 8px;
+  background: var(--code-bg);
+  color: var(--text-h);
+  font-family: var(--mono);
+  font-size: 12px;
+  line-height: 1.55;
+  resize: vertical;
+  outline: none;
+  tab-size: 2;
+}
+
+.editor:focus {
+  border-color: var(--accent);
+}
+
+pre.json {
+  margin: 0;
+  padding: 10px 12px;
+  border-radius: 8px;
+  background: var(--code-bg);
+  color: var(--text-h);
+  font-family: var(--mono);
+  font-size: 12px;
+  line-height: 1.5;
+  overflow-x: auto;
+  max-height: 320px;
+}
+
+code {
+  font-family: var(--mono);
+  font-size: 0.92em;
+  color: var(--text-h);
+}
+
+/* ---------------------------------------------------------------------------
+   Badges & tables
+   --------------------------------------------------------------------------- */
+.badge {
+  display: inline-flex;
+  align-items: center;
+  padding: 2px 8px;
+  border-radius: 999px;
+  font-size: 10px;
+  font-weight: 700;
+  letter-spacing: 0.03em;
+  text-transform: uppercase;
+  background: var(--code-bg);
+  color: var(--text);
+}
+
+.badge.ok {
+  background: var(--ok-bg);
+  color: var(--ok);
+}
+
+.badge.err {
+  background: var(--err-bg);
+  color: var(--err);
+}
+
+.badge.warn {
+  background: var(--warn-bg);
+  color: var(--warn);
+}
+
+.badge.accent {
+  background: var(--accent-bg);
+  color: var(--accent);
+}
+
+table.lab-table {
+  width: 100%;
+  border-collapse: collapse;
+  font-size: 12px;
+}
+
+table.lab-table th {
+  text-align: left;
+  font-size: 10px;
+  font-weight: 700;
+  letter-spacing: 0.06em;
+  text-transform: uppercase;
+  color: var(--text);
+  padding: 6px 8px;
+  border-bottom: 1px solid var(--border);
+  white-space: nowrap;
+}
+
+table.lab-table td {
+  padding: 6px 8px;
+  border-bottom: 1px solid var(--border);
+  color: var(--text-h);
+  vertical-align: middle;
+}
+
+table.lab-table tr:last-child td {
+  border-bottom: none;
+}
+
+table.lab-table td.mono,
+table.lab-table td .mono {
+  font-family: var(--mono);
+  font-size: 11px;
+}
+
+.scroll-y {
+  max-height: 340px;
+  overflow-y: auto;
+}
+
+.empty {
+  padding: 20px;
+  text-align: center;
+  font-size: 12px;
+  color: var(--text);
+}
+
+/* ---------------------------------------------------------------------------
+   JSON Forms (vanilla) — token-based theme.
+   Class names come from the `styles` map provided in main.ts.
+   --------------------------------------------------------------------------- */
+.if-control {
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+  margin-bottom: 12px;
+}
+
+.if-label {
+  font-size: 12px;
+  font-weight: 600;
+  color: var(--text-h);
+}
+
+.if-input {
+  font-family: inherit;
+  font-size: 13px;
+}
+
+input.if-input:not([type='checkbox']):not([type='radio']),
+select.if-input,
+textarea.if-input {
+  width: 100%;
+  box-sizing: border-box;
+  padding: 8px 10px;
+  line-height: 1.4;
+  border: 1px solid var(--border);
+  border-radius: 6px;
+  background: var(--bg);
+  color: var(--text-h);
+  outline: none;
+  transition: border-color 0.2s, box-shadow 0.2s;
+}
+
+input.if-input:focus,
+select.if-input:focus,
+textarea.if-input:focus {
+  border-color: var(--accent);
+  box-shadow: 0 0 0 2px var(--accent-bg);
+}
+
+input.if-input[type='checkbox'],
+input.if-input[type='radio'] {
+  width: 16px;
+  height: 16px;
+  accent-color: var(--accent);
+  cursor: pointer;
+}
+
+.if-error {
+  font-size: 11px;
+  color: var(--err);
+}
+
+.if-desc {
+  font-size: 11px;
+  color: var(--text);
+}
+
+.if-vstack {
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+}
+
+.if-hstack {
+  display: flex;
+  flex-direction: row;
+  gap: 12px;
+}
+
+.if-hstack-item {
+  flex: 1;
+}
+
+.if-group {
+  border: 1px solid var(--border);
+  border-radius: 8px;
+  padding: 12px 14px;
+  margin-bottom: 12px;
+}
+
+.if-group-label {
+  display: block;
+  font-size: 12px;
+  font-weight: 700;
+  color: var(--text-h);
+  margin-bottom: 10px;
+}
+
+.if-array {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+}
+
+/* Override the colors vanilla.css hardcodes into array items with tokens.
+   Scoped under .if-array so these win on specificity. */
+.if-array .array-list-item-label {
+  background: var(--code-bg);
+  color: var(--text-h);
+  border-radius: 4px;
+}
+
+.if-array .array-list-item-label:hover {
+  background: var(--border);
+}
+
+.if-array .array-list-item-toolbar > button {
+  cursor: pointer;
+  padding: 2px 8px;
+  border: 1px solid var(--border);
+  border-radius: 4px;
+  background: transparent;
+  color: var(--text);
+  transition: border-color 0.2s, color 0.2s;
+}
+
+.if-array .array-list-item-toolbar > button:hover:not(:disabled) {
+  border-color: var(--accent-border);
+  color: var(--accent);
+}
+
+.if-array .array-list-item-content {
+  padding: 8px 0 0;
+}
+
+/* x-inflow-ui decorations — the entire styling contract the package exposes */
+.if-inflow-field {
+  gap: 6px;
+}
+
+.if-btn {
+  display: inline-flex;
+  align-items: center;
+  gap: 4px;
+  cursor: pointer;
+  font-family: inherit;
+  font-size: 12px;
+  font-weight: 600;
+  padding: 6px 10px;
+  border: 1px solid var(--border);
+  border-radius: 6px;
+  background: var(--accent-bg);
+  color: var(--accent);
+  transition: border-color 0.2s;
+}
+
+.if-btn:hover {
+  border-color: var(--accent-border);
+}
+
+.if-btn-icon {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  cursor: pointer;
+  padding: 4px 6px;
+  border: 1px solid var(--border);
+  border-radius: 6px;
+  background: transparent;
+  color: var(--accent);
+  transition: border-color 0.2s;
+}
+
+.if-btn-icon:hover {
+  border-color: var(--accent-border);
+}
+
+/* oneOf "clear data?" confirm — native <dialog>, themed to match */
+.if-dialog {
+  border: 1px solid var(--border);
+  border-radius: 10px;
+  padding: 20px 22px;
+  max-width: 340px;
+  background: var(--bg);
+  color: var(--text-h);
+  box-shadow: var(--shadow);
+}
+
+.if-dialog::backdrop {
+  background: rgba(0, 0, 0, 0.4);
+}
+
+.if-dialog-title {
+  margin: 0 0 8px;
+  font-size: 15px;
+  font-weight: 700;
+  color: var(--text-h);
+}
+
+.if-dialog-body {
+  margin: 0 0 16px;
+  font-size: 13px;
+  line-height: 1.5;
+  color: var(--text);
+}
+
+.if-dialog-actions {
+  display: flex;
+  justify-content: flex-end;
+  gap: 8px;
+}
+
+.if-btn-secondary {
+  cursor: pointer;
+  font-family: inherit;
+  font-size: 12px;
+  font-weight: 600;
+  padding: 6px 12px;
+  border: 1px solid var(--border);
+  border-radius: 6px;
+  background: transparent;
+  color: var(--text);
+  transition: border-color 0.2s;
+}
+
+.if-btn-secondary:hover {
+  border-color: var(--accent-border);
+}
