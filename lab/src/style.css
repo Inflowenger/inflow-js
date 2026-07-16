@@ -405,10 +405,37 @@ textarea.if-input:focus {
 
 input.if-input[type='checkbox'],
 input.if-input[type='radio'] {
+  flex: 0 0 auto; /* vanilla.css gives every wrapped input flex:1, which zeroes the basis below */
   width: 16px;
   height: 16px;
   accent-color: var(--accent);
   cursor: pointer;
+}
+
+/* Booleans read as "box then label on one line", but vanilla renders every
+   control through the same ControlWrapper: label, then .wrapper, then
+   error/description. Nothing marks a control as boolean, so :has() detects one
+   and grid re-places the rows the wrapper already emitted. */
+.if-control:has(> .wrapper > input[type='checkbox']) {
+  display: grid;
+  grid-template-columns: auto 1fr;
+  align-items: center;
+  column-gap: 8px;
+}
+
+.if-control:has(> .wrapper > input[type='checkbox']) > .wrapper {
+  grid-area: 1 / 1;
+}
+
+.if-control:has(> .wrapper > input[type='checkbox']) > .if-label {
+  grid-area: 1 / 2;
+  font-weight: 500;
+  cursor: pointer;
+}
+
+.if-control:has(> .wrapper > input[type='checkbox']) > .if-error,
+.if-control:has(> .wrapper > input[type='checkbox']) > .if-desc {
+  grid-area: 2 / 1 / 2 / -1;
 }
 
 .if-error {

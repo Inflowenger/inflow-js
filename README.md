@@ -213,7 +213,6 @@ git push origin plugin-form-builder-v0.2.0
 
 Tags are per-package (`plugin-form-builder-v*`, `flow-trace-v*`) — the two version independently, and there is no reason to drag one forward because the other moved. CI refuses to publish if the tag and the `package.json` version disagree.
 
-One-time setup: the `@inflowenger` org on npmjs.com, and an `NPM_TOKEN` (automation type) in the repo's Actions secrets.
 
 ## License
 
