@@ -49,6 +49,7 @@ const state = replay(lines).get(pid)
 | `node:enter` / `node:exit` | A node starts / settles | `node`, `status`, `error` |
 | `jump` | A GoTo transfers into another flow | `to`, `ret` |
 | `log` | Diagnostics from user code, a plugin, or the runtime | `level`, `src`, `msg`, `fields` |
+| ↳ | A plugin may tag a log with `fields.category` — `progress` (a sub-100% frame: `percent`, `frame`, optional `details`) or `protocol` (an inflowV1 transport trace) — so you can render it as a pie chart or hide it | see `ProgressLogFields` / `ProtocolLogFields` |
 | `finish` | The process ends | `status`, `durationMs`, `error` |
 | `gap` | Events were lost | `from`, `count` |
 | `skip` | A message wasn't a usable v1 event | `reason` |

@@ -82,10 +82,55 @@ export interface FlowJumpDetail {
   ret?: NodeRef
 }
 
-/** Free-form diagnostics. `msg` is human-readable; other keys are context. */
+/**
+ * Free-form diagnostics. `msg` is human-readable; other keys are context.
+ *
+ * A plugin sub-classifies some log events with {@link LogCategory} in the
+ * `category` field so a consumer can render them specially (a progress pie
+ * chart, a protocol trace) without a new event kind — see {@link ProgressLogFields}
+ * and {@link ProtocolLogFields}. Plain diagnostics carry no `category`.
+ */
 export interface LogDetail {
-  msg: string
+  msg?: string
+  category?: LogCategory
   [field: string]: unknown
+}
+
+/** Sub-class of a `log` event, carried in {@link LogDetail.category}. */
+export type LogCategory = 'protocol' | 'progress'
+
+/** The human-readable content of a progress frame. */
+export interface Frame {
+  title: string
+  content: string
+  /** Reserved open bag for frontend-effective extras (e.g. an `items` list). */
+  meta?: Record<string, unknown>
+}
+
+/**
+ * Fields on a `log` event with `category: 'progress'` — a sub-100% frame emitted
+ * while a plugin job runs. `percent` is [1,99] (100% is node completion, not a
+ * frame); render it as the node's pie chart and show `frame` beside it. `details`
+ * is an optional partial payload some jobs surface as they go.
+ */
+export interface ProgressLogFields {
+  category: 'progress'
+  percent: number
+  frame: Frame
+  details?: Record<string, unknown>
+}
+
+/**
+ * Fields on a `log` event with `category: 'protocol'` — an inflowV1 transport
+ * trace (init/request subjects, job-id assignment, subscriptions). Diagnostics
+ * about the plugin↔core NATS handshake, not task output.
+ */
+export interface ProtocolLogFields {
+  category: 'protocol'
+  proto: string
+  msg: string
+  subject?: string
+  jobId?: string
 }
 
 /** One event off the wire. */
