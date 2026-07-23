@@ -19,6 +19,8 @@ export {
   EVENT_SCHEMA_VERSION,
   edgeKey,
   nodeKey,
+  type DepReadyFields,
+  type DepWaitFields,
   type EdgeRef,
   type EdgeReason,
   type EdgeSelectDetail,
@@ -26,7 +28,9 @@ export {
   type ExitStatus,
   type FinishStatus,
   type FlowJumpDetail,
+  type Frame,
   type Level,
+  type LogCategory,
   type LogDetail,
   type NodeEnterDetail,
   type NodeExitDetail,
@@ -34,9 +38,28 @@ export {
   type ProcEvent,
   type ProcFinishDetail,
   type ProcStartDetail,
+  type ProgressLogFields,
+  type ProtocolLogFields,
 } from './types.js'
 
 export { isProcEvent, parseEvent, type ParseResult, type RejectReason } from './parse.js'
+
+export { describeEvent } from './describe.js'
+
+export {
+  REF_PATTERN,
+  parseRefs,
+  refText,
+  resolveRefs,
+  type GraphIndex,
+  type LabelledToken,
+  type NamedEdge,
+  type NamedNode,
+  type RefToken,
+  type ResolveOptions,
+  type TextToken,
+  type Token,
+} from './refs.js'
 
 export {
   FlowTracker,

@@ -1,6 +1,6 @@
 {
   "name": "@inflowenger/flow-trace",
-  "version": "0.1.2",
+  "version": "0.2.0",
   "description": "Parses the Inflow process event stream into flow movement and completion. Dependency-free, framework-agnostic.",
   "type": "module",
   "main": "./dist/index.js",

@@ -340,7 +340,11 @@ function statusTone(status: string) {
           </thead>
           <tbody>
             <tr v-for="edge in edges" :key="edge.key">
-              <td class="mono">{{ edge.from.node }} → {{ edge.to.node }}</td>
+              <!-- Ids: the stream never names a node. A real view resolves these
+                   against its graph (see resolveRefs); the lab has no graph. -->
+              <td class="mono" :title="`${edge.from.flow} → ${edge.to.flow}`">
+                {{ edge.from.node }} → {{ edge.to.node }}
+              </td>
               <td class="mono">{{ edge.edgeId || '(synthesised)' }}</td>
               <td class="mono">{{ edge.tags.length ? edge.tags.join(', ') : '—' }}</td>
               <td>

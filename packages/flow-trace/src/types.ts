@@ -38,9 +38,18 @@ export interface NodeRef {
   node: string
 }
 
-/** An outgoing edge and where it lands. */
+/**
+ * An outgoing edge and where it lands.
+ *
+ * Ids only — deliberately. The engine has no business shipping the editor's
+ * labels, and an event that embedded them would be wrong the moment someone
+ * renamed a node. A consumer that wants titles resolves these ids against the
+ * graph it already has; see {@link parseRefs} for doing that inside log text.
+ */
 export interface EdgeRef extends NodeRef {
+  /** The graph's edge id. Empty for edges the runtime synthesised (a GoTo jump). */
   edgeId: string
+  /** The tags the runtime matched to reach this decision. */
   tags: string[]
 }
 
@@ -97,7 +106,7 @@ export interface LogDetail {
 }
 
 /** Sub-class of a `log` event, carried in {@link LogDetail.category}. */
-export type LogCategory = 'protocol' | 'progress'
+export type LogCategory = 'protocol' | 'progress' | 'dep.wait' | 'dep.ready'
 
 /** The human-readable content of a progress frame. */
 export interface Frame {
@@ -131,6 +140,35 @@ export interface ProtocolLogFields {
   msg: string
   subject?: string
   jobId?: string
+}
+
+/**
+ * Fields on a `log` event with `category: 'dep.wait'` — a join node parking
+ * until the branches it depends on arrive.
+ *
+ * `depends` is the whole join, `pending` the part still outstanding, both as
+ * node ids in the event's own flow. A `dep.wait` with no matching `dep.ready`
+ * for the same node is a join that never completed; the variant that carries
+ * `waitedMs` is the runtime giving up, because the process ended with branches
+ * that will now never arrive (it is emitted at `warn`).
+ */
+export interface DepWaitFields {
+  category: 'dep.wait'
+  depends: string[]
+  pending: string[]
+  waitedMs?: number
+}
+
+/**
+ * Fields on a `log` event with `category: 'dep.ready'` — every dependency of a
+ * join has arrived and the node is about to run. Closes a {@link DepWaitFields}
+ * for the same node. A join whose dependencies were already in when it was
+ * dequeued emits neither event.
+ */
+export interface DepReadyFields {
+  category: 'dep.ready'
+  depends: string[]
+  waitedMs: number
 }
 
 /** One event off the wire. */

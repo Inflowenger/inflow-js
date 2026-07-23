@@ -141,6 +141,40 @@ test('an edge taken then later pruned stays marked as travelled', () => {
   assert.equal(neverTaken.takenCount, 0)
 })
 
+test('a routing decision carries ids only — names come from the graph, not the wire', () => {
+  const tracker = createFlowTracker()
+  const moves: MoveEvent[] = []
+  tracker.on('move', (m) => moves.push(m))
+  tracker.ingestMany([
+    { v: 1, pid: 'ids', seq: 0, ts: 1_784_837_125_910, kind: 'proc.start', level: 'info', src: 'rt', detail: { flow: 'f', node: 'n_a' } },
+    {
+      v: 1,
+      pid: 'ids',
+      seq: 1,
+      ts: 1_784_837_125_911,
+      kind: 'edge.select',
+      level: 'info',
+      src: 'rt',
+      flow: 'f',
+      node: 'n_a',
+      detail: {
+        taken: [{ flow: 'f', node: 'n_b', edgeId: 'e_ab', tags: ['approved'] }],
+        pruned: [{ flow: 'f', node: 'n_c', edgeId: 'e_ac', tags: ['rejected'] }],
+      },
+    },
+  ])
+
+  assert.equal(moves[0]!.edgeId, 'e_ab')
+  assert.deepEqual(moves[0]!.tags, ['approved'])
+
+  // The target exists in state before it has entered, but unnamed: nothing on
+  // the wire names a node until node.enter, and a pruned branch never enters.
+  const state = tracker.state('ids')!
+  assert.equal(state.nodes[nodeKey('f', 'n_b')]!.title, undefined)
+  assert.equal(state.nodes[nodeKey('f', 'n_c')], undefined)
+  assert.equal(state.edges['e_ac']!.taken, false)
+})
+
 /** A node cycling A -> B -> A for `iterations` passes, as a hot loop does. */
 function hotLoop(iterations: number): ProcEvent[] {
   const events: ProcEvent[] = []

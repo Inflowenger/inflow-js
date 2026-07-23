@@ -562,6 +562,9 @@ export class FlowTracker {
       const to: NodeRef = { flow: edge.flow, node: edge.node }
       const key = this.recordEdge(state, from, edge, true, event.ts)
       // Register the target so it exists in state before it reports entering.
+      // It has no title yet — nothing on the wire names a node until it enters,
+      // and a pruned branch is never named at all. Resolve ids against the graph
+      // (see resolveRefs) rather than waiting for a name that may never come.
       this.node(state, to)
       this.emit('move', {
         pid: event.pid,
