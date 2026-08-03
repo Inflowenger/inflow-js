@@ -1,9 +1,14 @@
 /**
  * Inflow UI - Semantic CSS Classes
  *
- * These classes provide structural styling only.
- * No colors, no design-system-specific properties.
- * Override these in your application theme to match your design system.
+ * Geometry only: what it takes for a decorated field to hold together —
+ * a button on its input's row, a checkbox that stays a checkbox. No colours, no
+ * spacing scale, no type; nothing that belongs to a design system.
+ *
+ * Everything here is scoped inside this package's own elements (.inflow-*), and
+ * written at the lowest specificity that does the job, so a host's theme classes
+ * (containerClass / buttonClass / iconButtonClass) always win. Override any of
+ * it in your application theme to match your design system.
  */
 
 /* Container wrappers */
@@ -25,6 +30,84 @@
   display: flex;
   align-items: center;
   gap: 0.5rem;
+}
+
+/* ---------------------------------------------------------------------------
+   Decorated control layout
+   ---------------------------------------------------------------------------
+   A decorated control is [prepend?] [the control that would have rendered
+   anyway] [append?]. The flex row above puts a button *beside* that control —
+   but the control is itself a column of [label][input][error][description]
+   whose height changes as validation comes and goes, so centring the button
+   against that box makes it drift down the page the moment an error appears,
+   and `align-items: flex-end` pins it to the description instead of the input.
+
+   The button belongs on the input's own row. So the row becomes a grid, the
+   control's own rows are promoted into it with `display: contents`, and the
+   button is placed on the row the input occupies — where it stays, whatever the
+   control does below.
+
+   Only the geometry lives here. Everything visible — spacing, borders, colour,
+   type — stays the host's, through the `containerClass` / `buttonClass` /
+   `iconButtonClass` theme and its own control styles. Every rule below is
+   scoped inside `.inflow-control-inner`, this package's own element, so it can
+   never reach markup it doesn't own, and every one is a single- or double-class
+   selector that a themed rule out-specifies.
+
+   Checkbox and radio controls are excluded: they render as "box then label" on
+   one line, which the flex row above already does correctly. --------------- */
+.inflow-control-inner:not(:has(input:is([type='checkbox'], [type='radio']))) {
+  display: grid;
+  /* prepend | control | append. The side columns collapse to zero when unused,
+     and the gaps are the buttons' own margins rather than `column-gap`, so an
+     undecorated side never indents the field — a decorated control has to line
+     up with a plain one. */
+  grid-template-columns: auto minmax(0, 1fr) auto;
+  column-gap: 0;
+  row-gap: 0.25rem;
+  align-items: center;
+}
+
+.inflow-control-inner:not(:has(input:is([type='checkbox'], [type='radio']))) > * {
+  grid-column: 2;
+  min-width: 0;
+}
+
+/* The rows of a JSON Forms control wrapper, lifted into the grid so the button
+   can share the input's row.
+   `.control > .wrapper` is the vanilla renderer set's structure, and its
+   `styles` map keeps those class names even when a host appends its own — that
+   is what `mergeStyles` is for. The `:has(> .wrapper)` guard is what keeps this
+   honest: `display: contents` drops the control's own box, so it is only worth
+   doing where there are rows underneath to promote. Anything else stays a single
+   grid cell in the middle column — the flex behaviour this replaces, i.e. the
+   fallback is the status quo rather than a broken form.
+   A host that styles the control box itself (a border, a background) and wants
+   it kept can set `display: block` back on it; the button then aligns to the
+   box's centre as before. */
+.inflow-control-inner:not(:has(input:is([type='checkbox'], [type='radio']))) > .control:has(> .wrapper) {
+  display: contents;
+}
+
+.inflow-control-inner > .control > * {
+  grid-column: 2;
+  min-width: 0;
+}
+
+.inflow-control-inner > .control > .label {
+  grid-row: 1;
+}
+
+.inflow-control-inner > .control > .wrapper {
+  grid-row: 2;
+}
+
+.inflow-control-inner > .control > .error {
+  grid-row: 3;
+}
+
+.inflow-control-inner > .control > .description {
+  grid-row: 4;
 }
 
 /* Action elements */
@@ -67,15 +150,59 @@
   order: 1;
 }
 
-.inflow-position-prepend {
-  /* Prepended to the control/layout inner container */
+/* above / below sit in the outer flex column, which stretches its children to
+   the full width of the field — making a button read as a banner. */
+.inflow-ui > .inflow-position-above,
+.inflow-ui > .inflow-position-below {
+  align-self: flex-start;
 }
 
-.inflow-position-append {
-  /* Appended to the control/layout inner container */
+/* Placed in the side columns of the grid above. The margin is the gap: see the
+   note on `column-gap: 0` there. The row is left to auto-placement, which lands
+   the button beside a control that stayed one cell. */
+.inflow-control-inner > .inflow-position-prepend {
+  grid-column: 1;
+  margin-right: 0.5rem;
 }
 
-/* OneOf renderer */
+.inflow-control-inner > .inflow-position-append {
+  grid-column: 3;
+  margin-left: 0.5rem;
+}
+
+/* Only when the control was promoted into rows does the button need naming one:
+   auto-placement would put it in the first free cell, which is the label's row.
+   Row 2 is the input's. */
+.inflow-control-inner:has(> .control:has(> .wrapper)) > .inflow-position-prepend,
+.inflow-control-inner:has(> .control:has(> .wrapper)) > .inflow-position-append {
+  grid-row: 2;
+}
+
+/* A checkbox or radio is a fixed-size box, but a renderer set that wraps its
+   inputs in a flex row will have given it `flex: 1` — which zeroes its basis and
+   stretches it across the whole field. Sized by the host; never stretched. The
+   two selectors are the same rule at two specificities: the second outranks
+   vanilla's `.control > .wrapper > input`, which the first ties with (and would
+   lose to, since a host is free to load this stylesheet first). */
+.inflow-control-inner input[type='checkbox'],
+.inflow-control-inner input[type='radio'],
+.inflow-control-inner .wrapper > input[type='checkbox'],
+.inflow-control-inner .wrapper > input[type='radio'] {
+  flex: 0 0 auto;
+}
+
+/* ---------------------------------------------------------------------------
+   OneOf renderer
+   ---------------------------------------------------------------------------
+   No renderer in this package emits these yet — `oneOf` and enum are left to the
+   host's renderer set on purpose (see the README) — so they are here for a host
+   that wants to reuse the naming.
+
+   They are the one place with any colour, and it is all sourced from
+   `--inflow-*` variables the host may set, falling back to `inherit` /
+   `currentColor` rather than to literal values. A guessed literal is how this
+   ends up as near-black text on a dark surface: fallbacks have to adapt to the
+   theme they land in, not to the theme they were written in. ------------- */
 .inflow-oneof {
   display: flex;
   flex-direction: column;
@@ -93,17 +220,17 @@
   display: block;
   font-size: 12px;
   font-weight: 600;
-  color: var(--text-h, #08060d);
+  color: var(--inflow-fg, inherit);
 }
 
 .inflow-oneof-select {
   width: 100%;
   padding: 6px 8px;
   font-size: 12px;
-  border: 1px solid var(--border, #e5e4e7);
+  border: 1px solid var(--inflow-border, color-mix(in srgb, currentColor 30%, transparent));
   border-radius: 6px;
-  background: var(--bg, #fff);
-  color: var(--text-h, #08060d);
+  background: var(--inflow-bg, transparent);
+  color: var(--inflow-fg, inherit);
   outline: none;
   transition: border-color 0.2s, box-shadow 0.2s;
   box-sizing: border-box;
@@ -112,17 +239,17 @@
 }
 
 .inflow-oneof-select:focus {
-  border-color: var(--accent, #aa3bff);
-  box-shadow: 0 0 0 2px var(--accent-bg, rgba(170, 59, 255, 0.2));
+  border-color: var(--inflow-accent, currentColor);
+  box-shadow: 0 0 0 2px var(--inflow-accent-soft, color-mix(in srgb, currentColor 20%, transparent));
 }
 
 .inflow-oneof-error {
   font-size: 11px;
-  color: #ef4444;
+  color: var(--inflow-danger, #ef4444);
   margin-top: 2px;
 }
 
 .inflow-required {
-  color: #ef4444;
+  color: var(--inflow-danger, #ef4444);
   margin-left: 2px;
 }
