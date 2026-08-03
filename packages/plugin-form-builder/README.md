@@ -222,6 +222,7 @@ import '@inflowenger/plugin-form-builder/vanilla-fixes.css'
 | Empty error / description rows | Rendered whether or not they have anything to say, with a `min-height` — ~3em of dead space per control. Collapsed until they have text. |
 | Checkboxes | `.control > .wrapper` gives every input `flex: 1`, which zeroes a checkbox's basis and smears it across the field. Reset to its natural size (still yours to size), and re-placed as "box then label" on one line. |
 | Arrays | Rendered as `<fieldset>` styled `display: flex`, which takes the `<legend>` out of legend flow and straddles it across the border. Put back as a block, legend on its own row, reading "Labels ….. +" rather than leading with the button. |
+| Arrays of plain values | Every item is an accordion whose header is the item's label — for `items: { type: 'string' }` that label is the index, so the form reads as a list of bare numbers and each field costs a click. Collapsed onto one row: badge, field, buttons. Arrays of objects keep the accordion. |
 
 Geometry only, again — no colour, spacing or type. It is opt-in rather than part of `style.css` because it targets vanilla's class names (`.control`, `.wrapper`, `.array-list`), which are generic enough that an app may have its own; importing it is how you say you use that renderer set. Every rule is element-qualified or carries a `:has()`, so it corrects vanilla whichever order the two stylesheets load in.
 

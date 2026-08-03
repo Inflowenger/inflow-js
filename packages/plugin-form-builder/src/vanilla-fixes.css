@@ -103,3 +103,106 @@ legend.array-list-legend > .array-list-add {
   order: 2;
   margin-left: auto;
 }
+
+/* `+`, `↑`, `↓`, `🗙` are button *text*, and a <button> inherits no font from
+   the page — it starts on the UA's own, which is why an array's chrome is the
+   one part of a themed form still drawn in Arial. This hands them back to
+   whatever the host set; it does not choose a face, and the size stays the
+   host's to set. */
+legend.array-list-legend > .array-list-add,
+.array-list-item-toolbar > button {
+  font-family: inherit;
+}
+
+/* ---------------------------------------------------------------------------
+   Arrays of plain values
+   ---------------------------------------------------------------------------
+   Vanilla draws every array item as an accordion: a toolbar row carrying the
+   item's label, and a content pane held at `display: none` until that row is
+   clicked. For an array of objects that earns its keep. For `items: { type:
+   'string' }` it does not — the label is the index, so the form reads as a
+   list of bare numbers, and a click on each is the price of seeing a single
+   text box. One row, one field: badge, field, buttons on a line.
+
+   The tell is the control's id. @jsonforms/vue ids a control after the scope
+   it was drawn from (`createId(uischema.scope)`), so a property carries the
+   path it came from — `#/properties/name` — while an item that *is* the value
+   has nothing to descend into and gets a bare `#` (`#2`, `#3`… once the ids
+   repeat down the list). Child combinators throughout, so an object row
+   holding an array of its own is not mistaken for one of these.
+
+   `display: contents` hands the toolbar's four children to this grid; the
+   field is placed in column 2 explicitly, and the label (auto-placed first,
+   into column 1) and then the buttons (columns 3–5) flow around it. --------- */
+.array-list-item:has(
+    > .array-list-item-content
+      > .vertical-layout
+      > .vertical-layout-item
+      > .control[id^='#']:not([id*='/'])
+  ) {
+  display: grid;
+  grid-template-columns: auto minmax(0, 1fr) auto auto auto;
+  align-items: center;
+  gap: 0.5rem;
+}
+
+.array-list-item:has(
+    > .array-list-item-content
+      > .vertical-layout
+      > .vertical-layout-item
+      > .control[id^='#']:not([id*='/'])
+  )
+  > .array-list-item-toolbar {
+  display: contents;
+}
+
+/* Vanilla gives the label `flex: 1`, which stretches it into a bar across the
+   row; in this grid it is a cell of its own and the flex value is moot, but
+   the height it sets with it is not. */
+.array-list-item:has(
+    > .array-list-item-content
+      > .vertical-layout
+      > .vertical-layout-item
+      > .control[id^='#']:not([id*='/'])
+  )
+  > .array-list-item-toolbar
+  > .array-list-item-label {
+  flex: 0 0 auto;
+  height: auto;
+  /* the toolbar is vanilla's expand/collapse hit area; with the field on the
+     row already there is nothing left to reveal. */
+  cursor: default;
+}
+
+.array-list-item:has(
+    > .array-list-item-content
+      > .vertical-layout
+      > .vertical-layout-item
+      > .control[id^='#']:not([id*='/'])
+  )
+  > .array-list-item-content {
+  display: block;
+  grid-area: 1 / 2;
+  padding: 0;
+  min-width: 0;
+}
+
+/* The item is the value, so there is no property to name — vanilla emits the
+   label element anyway, holding a single space, which is enough to claim a
+   line above the field (`:empty` does not match whitespace). Its own margin
+   goes with it: on a row aligned to its centre, a control's trailing space
+   would push the field off the buttons' line. */
+.array-list-item-content
+  > .vertical-layout
+  > .vertical-layout-item
+  > .control[id^='#']:not([id*='/']) {
+  margin-bottom: 0;
+}
+
+.array-list-item-content
+  > .vertical-layout
+  > .vertical-layout-item
+  > .control[id^='#']:not([id*='/'])
+  > .label {
+  display: none;
+}
