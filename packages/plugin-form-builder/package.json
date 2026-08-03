@@ -1,6 +1,6 @@
 {
   "name": "@inflowenger/plugin-form-builder",
-  "version": "0.2.0",
+  "version": "0.1.6",
   "description": "Vue 3 + JSON Forms renderer for Inflow's x-inflow-ui schema extension — schema-driven forms with actions and buttons",
   "type": "module",
   "main": "./dist/index.cjs",
