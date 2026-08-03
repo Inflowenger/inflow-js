@@ -204,10 +204,17 @@
 }
 
 /* Inside a decorated control the parent is the outer flex column, not the grid —
-   so this needs no column placement. It does need to be allowed to wrap. */
+   so this needs no column placement. It does need to be allowed to wrap.
+
+   `pre-line` because a message is often a list: a lookup that matched several
+   candidates and could not rebuild the form as a drop-down falls back to naming
+   them one per line, and collapsing those newlines runs the whole list into one
+   unreadable sentence. Runs of spaces still collapse, so ordinary prose is
+   unaffected. */
 .inflow-notif-body {
   min-width: 0;
   overflow-wrap: anywhere;
+  white-space: pre-line;
 }
 
 .inflow-notif-title {
