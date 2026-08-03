@@ -1,0 +1,105 @@
+/**
+ * Inflow UI - vanilla renderer repairs (optional)
+ *
+ * Layout bugs in @jsonforms/vue-vanilla that every host of this package ends up
+ * re-deriving. They are not in `style.css` because they are not ours to impose:
+ * they target vanilla's own class names — `.control`, `.wrapper`, `.array-list`
+ * — which are generic enough that an app may well have its own. Importing this
+ * file is how you say "I use the vanilla renderer set, patch it":
+ *
+ *   import '@jsonforms/vue-vanilla/vanilla.css'
+ *   import '@inflowenger/plugin-form-builder/style.css'
+ *   import '@inflowenger/plugin-form-builder/vanilla-fixes.css'
+ *
+ * Geometry only, like `style.css`: no colour, no spacing scale, no type. Every
+ * rule is element-qualified or carries a `:has()`, so it out-specifies the
+ * vanilla rule it corrects whichever order the two are loaded in — and any
+ * single design-system class of yours out-specifies nothing here by accident,
+ * because none of these properties are ones a theme sets.
+ */
+
+/* ---------------------------------------------------------------------------
+   Empty validation rows
+   ---------------------------------------------------------------------------
+   Vanilla renders the error and description rows whether or not they have
+   anything to say, and gives them `min-height: 1.5em` — so every control on the
+   form carries ~3em of blank space it never uses, and anything sitting beside
+   the control (an x-inflow-ui button, say) is measured against a box that is
+   mostly empty. They reappear the moment they have text. ------------------- */
+.control > .error:empty,
+.control > .description:empty {
+  display: none;
+}
+
+/* ---------------------------------------------------------------------------
+   Booleans
+   ---------------------------------------------------------------------------
+   A checkbox is "box, then label, on one line" — but vanilla draws every
+   control through the same wrapper: label, then .wrapper, then error, then
+   description, stacked. Nothing in the markup says "this one is a checkbox", so
+   `:has()` detects it and a grid re-places the rows the wrapper already
+   emitted, rather than asking for different markup.
+
+   The size stays yours: only the stretch is undone. `.control > .wrapper` is a
+   flex row that gives its input `flex: 1`, which zeroes the basis of a checkbox
+   and smears it across the field. ----------------------------------------- */
+.control > .wrapper > input[type='checkbox'],
+.control > .wrapper > input[type='radio'] {
+  flex: 0 0 auto;
+}
+
+.control:has(> .wrapper > input[type='checkbox']) {
+  display: grid;
+  grid-template-columns: auto 1fr;
+  align-items: center;
+  column-gap: 0.5rem;
+}
+
+.control:has(> .wrapper > input[type='checkbox']) > .wrapper {
+  grid-area: 1 / 1;
+}
+
+.control:has(> .wrapper > input[type='checkbox']) > .label {
+  grid-area: 1 / 2;
+  cursor: pointer;
+}
+
+.control:has(> .wrapper > input[type='checkbox']) > .error,
+.control:has(> .wrapper > input[type='checkbox']) > .description {
+  grid-area: 2 / 1 / 2 / -1;
+}
+
+/* ---------------------------------------------------------------------------
+   Arrays
+   ---------------------------------------------------------------------------
+   Vanilla renders an array as `<fieldset><legend>[+][label]</legend>…`, then
+   styles the fieldset `display: flex`. A legend in a flex container leaves
+   normal legend flow and straddles the fieldset's border. Put back as a block,
+   with the legend a row of its own — and reordered so it reads "Labels ….. +"
+   rather than leading with the button.
+
+   Element-qualified so it beats vanilla's `.array-list` regardless of which
+   stylesheet the host loads first. ---------------------------------------- */
+fieldset.array-list {
+  display: block;
+  min-width: 0;
+}
+
+legend.array-list-legend {
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+  float: none;
+  width: 100%;
+  padding: 0;
+}
+
+legend.array-list-legend > .array-list-label {
+  order: 1;
+  margin-bottom: 0;
+}
+
+legend.array-list-legend > .array-list-add {
+  order: 2;
+  margin-left: auto;
+}

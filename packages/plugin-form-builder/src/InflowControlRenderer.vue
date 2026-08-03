@@ -2,14 +2,15 @@
 import { computed, inject } from 'vue'
 import { rendererProps, useJsonFormsControl, DispatchRenderer } from '@jsonforms/vue'
 import type { ControlElement } from '@jsonforms/core'
-import type { InflowUiExtension, InflowActionContext } from './types'
+import type { InflowUiExtension } from './types'
 import { inflowControlTester, inflowLayoutTester } from './inflowTester'
 import InflowActionButton from './InflowActionButton.vue'
 import { InflowThemeConfigKey } from './InflowThemeConfig'
+import { useInflowActionContext, type InflowScope } from './useInflowActionContext'
 
 const props = defineProps(rendererProps<ControlElement>())
 
-const { control, handleChange } = useJsonFormsControl(props)
+const { control } = useJsonFormsControl(props)
 const theme = inject(InflowThemeConfigKey, {})
 
 const inflowUi = computed<InflowUiExtension | undefined>(() => {
@@ -24,28 +25,14 @@ const filteredRenderers = computed(() => {
   )
 })
 
-const actionContext = computed<InflowActionContext>(() => {
-  return {
-    data: control.value.data,
-    schema: control.value.schema,
-    uischema: control.value.uischema,
-    path: control.value.path,
-    updateData: (patch: Record<string, any>) => {
-      Object.entries(patch).forEach(([path, value]) => {
-        handleChange(path, value)
-      })
-    },
-    updateSchema: () => {
-      console.warn('[Inflow UI] updateSchema is not yet fully implemented')
-    },
-    updateUiSchema: () => {
-      console.warn('[Inflow UI] updateUiSchema is not yet fully implemented')
-    },
-    refresh: async () => {
-      // Vue reactivity handles updates automatically
-    }
-  }
-})
+const scope = computed<InflowScope>(() => ({
+  data: control.value.data,
+  schema: control.value.schema,
+  uischema: control.value.uischema,
+  path: control.value.path,
+}))
+
+const actionContext = useInflowActionContext(scope)
 
 const containerClasses = computed(() => {
   const classes = ['inflow-ui',

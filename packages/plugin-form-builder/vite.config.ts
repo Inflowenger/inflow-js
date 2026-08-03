@@ -1,6 +1,7 @@
 import { defineConfig } from 'vite'
 import vue from '@vitejs/plugin-vue'
 import dts from 'vite-plugin-dts'
+import { copyFileSync } from 'fs'
 import { resolve } from 'path'
 
 export default defineConfig({
@@ -10,6 +11,16 @@ export default defineConfig({
       insertTypesEntry: true,
       rollupTypes: true,
     }),
+    {
+      // vanilla-fixes.css ships as its own file rather than being merged into
+      // style.css: importing it is how a host opts into the vanilla renderer
+      // repairs (see the file's own header). Nothing imports it from source, so
+      // the bundler never sees it — it is copied verbatim.
+      name: 'inflow-copy-vanilla-fixes',
+      closeBundle() {
+        copyFileSync(resolve(__dirname, 'src/vanilla-fixes.css'), resolve(__dirname, 'dist/vanilla-fixes.css'))
+      },
+    },
   ],
   build: {
     lib: {

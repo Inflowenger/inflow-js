@@ -141,6 +141,25 @@
   justify-content: center;
 }
 
+/* An action in flight. Only the affordance — a disabled button must not still
+   look clickable — with no spinner, colour or animation of its own. */
+.inflow-action-button[disabled] {
+  cursor: default;
+}
+
+/* ---------------------------------------------------------------------------
+   Form status
+   ---------------------------------------------------------------------------
+   An action's contract returns void, so the line under the form is the only
+   channel it has to say anything at all. Laid out, never styled: colour and type
+   come from the host, either by overriding these or by taking the `status` slot
+   on <InflowForm> and rendering it in its own design system. ------------- */
+.inflow-form-busy,
+.inflow-form-status,
+.inflow-form-error {
+  margin: 0.25rem 0 0;
+}
+
 /* Position modifiers */
 .inflow-position-above {
   order: -1;
@@ -172,9 +191,13 @@
 
 /* Only when the control was promoted into rows does the button need naming one:
    auto-placement would put it in the first free cell, which is the label's row.
-   Row 2 is the input's. */
-.inflow-control-inner:has(> .control:has(> .wrapper)) > .inflow-position-prepend,
-.inflow-control-inner:has(> .control:has(> .wrapper)) > .inflow-position-append {
+   Row 2 is the input's.
+   Written as one `:has()` over a two-step relative selector rather than the
+   `:has(> .control:has(> .wrapper))` it reads as — `:has()` inside `:has()` is
+   invalid, and a browser drops the whole rule, which puts the button back on
+   the label's row. */
+.inflow-control-inner:has(> .control > .wrapper) > .inflow-position-prepend,
+.inflow-control-inner:has(> .control > .wrapper) > .inflow-position-append {
   grid-row: 2;
 }
 

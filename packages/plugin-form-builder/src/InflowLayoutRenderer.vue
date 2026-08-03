@@ -1,16 +1,16 @@
 <script setup lang="ts">
 import { computed, inject } from 'vue'
-import { rendererProps, useJsonFormsLayout, DispatchRenderer, useDispatch } from '@jsonforms/vue'
+import { rendererProps, useJsonFormsLayout, DispatchRenderer } from '@jsonforms/vue'
 import type { Layout } from '@jsonforms/core'
-import type { InflowUiExtension, InflowActionContext } from './types'
+import type { InflowUiExtension } from './types'
 import { inflowControlTester, inflowLayoutTester } from './inflowTester'
 import InflowActionButton from './InflowActionButton.vue'
 import { InflowThemeConfigKey } from './InflowThemeConfig'
+import { useInflowActionContext, type InflowScope } from './useInflowActionContext'
 
 const props = defineProps(rendererProps<Layout>())
 
 const { layout } = useJsonFormsLayout(props)
-const dispatch = useDispatch()
 const theme = inject(InflowThemeConfigKey, {})
 
 const inflowUi = computed<InflowUiExtension | undefined>(() => {
@@ -23,36 +23,14 @@ const filteredRenderers = computed(() => {
   )
 })
 
-const actionContext = computed<InflowActionContext>(() => {
-  const handleChange = (path: string, value: any) => {
-    dispatch({
-      type: 'UPDATE_DATA',
-      path,
-      updater: () => value
-    } as any)
-  }
+const scope = computed<InflowScope>(() => ({
+  data: layout.value.data,
+  schema: layout.value.schema,
+  uischema: layout.value.uischema,
+  path: layout.value.path,
+}))
 
-  return {
-    data: layout.value.data,
-    schema: layout.value.schema,
-    uischema: layout.value.uischema,
-    path: layout.value.path,
-    updateData: (patch: Record<string, any>) => {
-      Object.entries(patch).forEach(([path, value]) => {
-        handleChange(path, value)
-      })
-    },
-    updateSchema: () => {
-      console.warn('[Inflow UI] updateSchema is not yet fully implemented')
-    },
-    updateUiSchema: () => {
-      console.warn('[Inflow UI] updateUiSchema is not yet fully implemented')
-    },
-    refresh: async () => {
-      // Vue reactivity handles updates automatically
-    }
-  }
-})
+const actionContext = useInflowActionContext(scope)
 
 const containerClasses = computed(() => {
   const classes = ['inflow-ui',
