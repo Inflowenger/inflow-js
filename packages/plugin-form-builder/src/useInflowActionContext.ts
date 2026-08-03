@@ -6,8 +6,11 @@ import type {
   InflowActionContext,
   InflowFormEnvelope,
   InflowHostContext,
+  InflowNotification,
+  InflowNotificationEvent,
 } from './types'
 import { applyActionResult, normalizeFormEnvelope } from './formEnvelope'
+import { buildNotification, notifDefaults, reportToConsole } from './notifications'
 import { InflowFormControllerKey, InflowHostContextKey } from './InflowFormController'
 
 export interface InflowScope {
@@ -90,6 +93,35 @@ export function useInflowActionContext(
       if (next.hasData) dispatch(update('', () => next.data))
     }
 
+    /**
+     * A message about the field this action drives.
+     *
+     * The origin is resolved here rather than by the caller because only the
+     * renderer knows it: `action.target` when the button fills another field
+     * (a search box that writes into the key field), and the control's own
+     * `x-inflow-notif` for how that field wants its messages shown.
+     *
+     * Without a controller — a host on a bare `<JsonForms>` — there is nowhere
+     * to render it, so it goes to the host's listener if there is one and to the
+     * console if there isn't. Swallowing it is how a plugin's only explanation
+     * of a failure disappears.
+     */
+    function notify(input: InflowNotification | string): InflowNotificationEvent | null {
+      const origin = {
+        field: config.target ?? current.path,
+        defaults: notifDefaults(current.uischema),
+        source: 'action' as const,
+      }
+
+      if (controller) return controller.notify(input, origin)
+
+      const event = buildNotification(input, origin)
+      if (!event.message) return null
+      if (host.value.onNotify?.(event) === true) return null
+      reportToConsole(event)
+      return event
+    }
+
     const ctx: InflowActionContext = {
       data: current.data,
       schema: current.schema,
@@ -115,6 +147,8 @@ export function useInflowActionContext(
         if (controller) controller.error.value = message
         else if (message) console.error(`[Inflow UI] ${message}`)
       },
+      notify,
+      clearNotifications: (field) => controller?.clearNotifications(field),
       refresh: async () => {
         // Vue reactivity handles updates automatically
       },

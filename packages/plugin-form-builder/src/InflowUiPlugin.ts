@@ -1,7 +1,7 @@
 import { ref, type App, type Plugin } from 'vue'
 import type { InflowActionRegistry } from './InflowActionRegistry'
 import type { InflowThemeConfig } from './InflowThemeConfig'
-import type { InflowHostContext, InflowPluginCall } from './types'
+import type { InflowHostContext, InflowNotifyListener, InflowPluginCall } from './types'
 import { InflowThemeConfigKey } from './InflowThemeConfig'
 import { InflowActionRegistryKey } from './InflowActionRegistry'
 import { InflowHostContextKey } from './InflowFormController'
@@ -21,6 +21,15 @@ export interface InflowUiPluginOptions {
    * that uses it (`pluginFn`) ships built in.
    */
   call?: InflowPluginCall
+  /**
+   * How this app shows a message — a toast, a dialog, a desktop notification.
+   *
+   * Configured once here and every form's messages route through it. Return
+   * `true` to claim one; anything else and it still appears inline at its field,
+   * so a partial implementation (toasts for errors, nothing for the rest) is a
+   * safe place to stop.
+   */
+  onNotify?: InflowNotifyListener
   /** Default plugin id, when an app renders forms for one plugin only. */
   pluginId?: string
   /** Default settings profile sent with plugin calls. */
@@ -62,6 +71,7 @@ export const InflowUiPlugin: Plugin = {
       InflowHostContextKey,
       ref<InflowHostContext>({
         call: options.call,
+        onNotify: options.onNotify,
         pluginId: options.pluginId,
         settings: options.settings,
       }),
@@ -78,6 +88,7 @@ export function createInflowUi(options: InflowUiPluginOptions = {}): InflowUiPlu
     actions: options.actions || {},
     theme: options.theme || {},
     call: options.call,
+    onNotify: options.onNotify,
     pluginId: options.pluginId,
     settings: options.settings,
     builtinActions: options.builtinActions,

@@ -1,17 +1,21 @@
 <script setup lang="ts">
-import { computed, inject } from 'vue'
+import { computed, inject, onUnmounted, watch } from 'vue'
 import { rendererProps, useJsonFormsControl, DispatchRenderer } from '@jsonforms/vue'
 import type { ControlElement } from '@jsonforms/core'
-import type { InflowUiExtension } from './types'
+import type { InflowNotificationEvent, InflowUiExtension } from './types'
 import { inflowControlTester, inflowLayoutTester } from './inflowTester'
 import InflowActionButton from './InflowActionButton.vue'
+import InflowNotifications from './InflowNotifications.vue'
 import { InflowThemeConfigKey } from './InflowThemeConfig'
+import { InflowFormControllerKey } from './InflowFormController'
+import { buildNotification, readNotifExtension } from './notifications'
 import { useInflowActionContext, type InflowScope } from './useInflowActionContext'
 
 const props = defineProps(rendererProps<ControlElement>())
 
 const { control } = useJsonFormsControl(props)
 const theme = inject(InflowThemeConfigKey, {})
+const controller = inject(InflowFormControllerKey, undefined)
 
 const inflowUi = computed<InflowUiExtension | undefined>(() => {
   return (control.value.uischema as any)['x-inflow-ui']
@@ -33,6 +37,46 @@ const scope = computed<InflowScope>(() => ({
 }))
 
 const actionContext = useInflowActionContext(scope)
+
+// ---- Messages ---------------------------------------------------------------
+
+/**
+ * Tell the form that this field is showing its own messages, so the list under
+ * the form leaves them here. Watched rather than done once on mount because a
+ * plugin's answer can replace the whole document, and a control that comes back
+ * at a different path would otherwise claim the old one for ever.
+ */
+watch(
+  () => control.value.path,
+  (path, previous) => {
+    if (previous) controller?.releaseField(previous)
+    controller?.claimField(path)
+  },
+  { immediate: true },
+)
+
+onUnmounted(() => controller?.releaseField(control.value.path))
+
+/**
+ * What the schema itself says about this field — help, a standing warning.
+ * Rendered straight from the UI schema rather than pushed into the controller on
+ * mount: it is a property of the form, not an event, and putting it in the live
+ * list would have it survive the form that declared it.
+ */
+const declared = computed<InflowNotificationEvent[]>(() =>
+  readNotifExtension(control.value.uischema)
+    .map((entry) =>
+      buildNotification(entry, { field: control.value.path, source: 'schema' }),
+    )
+    .filter((event) => !!event.message),
+)
+
+/** What has since been said about it — a lookup's answer, a failure. */
+const raised = computed<InflowNotificationEvent[]>(
+  () => controller?.notifications.value.filter((event) => event.field === control.value.path) ?? [],
+)
+
+const notifications = computed(() => [...declared.value, ...raised.value])
 
 const containerClasses = computed(() => {
   const classes = ['inflow-ui',
@@ -96,6 +140,13 @@ const containerClasses = computed(() => {
         />
       </template>
     </div>
+
+    <!--
+      What there is to say about this field, under it. Sits after the control in
+      the DOM and before the `below` button, which orders itself last anyway —
+      a message about a value belongs against the value, not under the button.
+    -->
+    <InflowNotifications :items="notifications" />
 
     <!-- Below decorations -->
     <template v-if="inflowUi?.button?.position === 'below'">

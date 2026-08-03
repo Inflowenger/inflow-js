@@ -174,6 +174,74 @@
   margin: 0.25rem 0 0;
 }
 
+/* ---------------------------------------------------------------------------
+   Notifications
+   ---------------------------------------------------------------------------
+   What a field has to say about itself: declared help, and whatever a lookup or
+   the plugin reported since. Rendered under the control it is about — or under
+   the form, for the ones no field claimed.
+
+   Geometry, and one exception. Severity is the whole point of a notification, so
+   telling an error from a help line cannot be left entirely to the host: the
+   colours below come from `--inflow-*` variables the host may set, and fall back
+   to `currentColor` where a hue would be a guess about the surface. Override the
+   variables, the `.inflow-notif-*` classes, or the theme's `notifClass` — or
+   claim the message in `onNotify` and none of this renders at all. ------- */
+.inflow-notifications {
+  display: flex;
+  flex-direction: column;
+  gap: 0.25rem;
+  margin: 0.25rem 0 0;
+}
+
+.inflow-notif {
+  display: flex;
+  align-items: flex-start;
+  justify-content: space-between;
+  gap: 0.5rem;
+  font-size: 0.875em;
+  line-height: 1.4;
+}
+
+/* Inside a decorated control the parent is the outer flex column, not the grid —
+   so this needs no column placement. It does need to be allowed to wrap. */
+.inflow-notif-body {
+  min-width: 0;
+  overflow-wrap: anywhere;
+}
+
+.inflow-notif-title {
+  margin-right: 0.25rem;
+}
+
+.inflow-notif-dismiss {
+  flex: 0 0 auto;
+  cursor: pointer;
+  border: none;
+  background: transparent;
+  color: inherit;
+  padding: 0 0.25rem;
+  line-height: 1;
+  font-size: 1.1em;
+}
+
+.inflow-notif-help,
+.inflow-notif-info {
+  color: var(--inflow-fg-muted, inherit);
+}
+
+.inflow-notif-success {
+  color: var(--inflow-success, currentColor);
+}
+
+.inflow-notif-warning {
+  color: var(--inflow-warning, currentColor);
+}
+
+.inflow-notif-error {
+  color: var(--inflow-danger, #ef4444);
+}
+
 /* Position modifiers */
 .inflow-position-above {
   order: -1;

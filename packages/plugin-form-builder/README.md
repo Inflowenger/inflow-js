@@ -1,10 +1,17 @@
 # @inflowenger/plugin-form-builder
 
-Renders Inflow's `x-inflow-ui` schema extension as real form widgets, on top of [JSON Forms](https://jsonforms.io) + Vue 3.
+Renders Inflow's schema extensions as real form widgets, on top of [JSON Forms](https://jsonforms.io) + Vue 3.
 
-JSON Forms renders a form from a schema. Inflow's schemas carry an extra key, `x-inflow-ui`, describing behaviour a plain form has no vocabulary for — *put a button on this field, and run this action when it's clicked*. This package is the renderer that understands that key.
+JSON Forms renders a form from a schema. Inflow's schemas carry two extra keys describing what a plain form has no vocabulary for:
 
-It is strictly opt-in. Fields without `x-inflow-ui` fall through untouched to whatever renderer set you already use, so installing this changes nothing about your existing forms. It ships no design system: three class names are the whole styling contract.
+| | |
+|---|---|
+| `x-inflow-ui` | What this field can **do** — *put a button here, and run this action when it's clicked.* |
+| `x-inflow-notif` | What can be **said** about it — help, a verification result, a warning, a failure — and how this platform should show it. |
+
+This package is the renderer that understands both.
+
+It is strictly opt-in. Fields carrying neither key fall through untouched to whatever renderer set you already use, so installing this changes nothing about your existing forms. It ships no design system: four class names are the whole styling contract.
 
 ## Install
 
@@ -54,6 +61,8 @@ It **applies the answer by shape**:
 | Anything else (array, string, number) | Writes it to `action.target`, defaulting to the button's own control |
 | `null` / nothing | Nothing — a meta function that already wrote a status field doesn't clear the field it was fired from |
 
+A reserved key, `x-inflow-notif`, is lifted out of any of these first and [raised as a message](#saying-something-x-inflow-notif). It rides *alongside* the answer rather than instead of it — a lookup that resolved a key patches the key **and** says what it found.
+
 Row one is the interesting one, and it is new. A plugin can answer a call with *the next form*, and the dialog becomes it — which is also the only way to change a `<select>`'s options at runtime, since options live in the schema, not the data. The Go SDK's `jsonschema` / `jsonui` spelling is accepted alongside `schema` / `uischema`, and schemas arriving as JSON text are parsed, so a handler can return its own `FormBuilder` verbatim.
 
 Telling a re-render from a patch is deliberately conservative: an object counts as a form only when *every* key it has is one of `schema`, `jsonschema`, `uischema`, `uiSchema`, `jsonui`, `data`, `submit_to`, `submitTo`. A patch that happens to include a field called `schema` also includes `projectKey`, and stays a patch — mistaking one for the other would discard the user's work.
@@ -74,10 +83,17 @@ app.use(InflowUiPlugin, createInflowUi({
   // Configure it once here and every <InflowForm> inherits it; each form still
   // supplies the pluginId and settings profile it is bound to.
   call: ({ pluginId, fn, body }) => api.pluginFn(pluginId, fn, body),
+  // Where this platform shows a message. Return true to claim one; anything
+  // else and it still appears inline at its field. Optional.
+  onNotify: (event) => {
+    if (event.display === 'dialog') return myDialog.show(event), true
+    if (event.display === 'toast') return myToasts.push(event), true
+  },
   theme: {
     containerClass: 'my-field',
     buttonClass: 'my-btn',
     iconButtonClass: 'my-btn-icon',
+    notifClass: 'my-alert',
   },
   actions: {
     async loadLabels(ctx) {
@@ -122,7 +138,8 @@ actions: {
 | `updateData(patch)` | Apply changes. Keys are absolute leaf data paths. |
 | `updateSchema`, `updateUiSchema`, `updateForm(envelope)` | Replace the document and re-render. |
 | `applyResult(result, { target? })` | The default handling, as its own step. |
-| `setStatus`, `setError` | Report to the user. |
+| `setStatus`, `setError` | Report on the form's own line, about nothing in particular. |
+| `notify(message)`, `clearNotifications(field?)` | Say something **about a field** — routed to the host, shown at the field. |
 
 **Effects go through the context, not the return value.** The signature is `void` on purpose; an action that computes a value and returns it silently does nothing.
 
@@ -145,9 +162,12 @@ Actions resolve by name from the registry, so a schema can never invoke anything
   "x-inflow-ui": {
     "action": { "name": "pluginFn", "fn": "jira.meta.projects.resolve" },
     "button": { "position": "append", "label": "Find", "icon": "↻" }
-  }
+  },
+  "x-inflow-notif": { "severity": "help", "message": "The key, not the name — OPS, not Operations." }
 }
 ```
+
+The two keys are siblings, and either works alone: a field may have something to say without having anything to do.
 
 - `action.name` — `pluginFn` for a plugin call, or any name you registered.
 - `action.fn` — the meta method, exactly as passed to the SDK's `AddMeta`.
@@ -183,11 +203,16 @@ const renderers = [
 <JsonForms :schema="schema" :uischema="uischema" :data="data" :renderers="renderers" />
 ```
 
-Both testers rank at 1000, above the defaults, but only match elements that actually carry `x-inflow-ui` — so array order doesn't matter and unmarked fields never reach them. `markRaw` matters: without it Vue makes the component definitions reactive and JSON Forms gets slower for nothing.
+Both testers rank at 1000, above the defaults, but only match elements that actually carry `x-inflow-ui` or `x-inflow-notif` — so array order doesn't matter and unmarked fields never reach them. `markRaw` matters: without it Vue makes the component definitions reactive and JSON Forms gets slower for nothing.
 
 The layout tester covers `VerticalLayout`, `HorizontalLayout`, `Group`, `Category`, and `Categorization`.
 
-**One thing does not work this way: a replaced schema does not last.** `<JsonForms>` seeds its core from its props and re-seeds it whenever `data` changes — so in a host that two-way binds data, a schema an action pushed in is reverted by the next keystroke. `<InflowForm>` exists because it owns those props; if you need forms that re-render themselves, use it. Everything else — buttons, patches, status — behaves identically.
+**Two things do not work this way**, both because they need state that outlives a re-seeded core, which is exactly what `<InflowForm>` owns:
+
+- **A replaced schema does not last.** `<JsonForms>` seeds its core from its props and re-seeds it whenever `data` changes — so in a host that two-way binds data, a schema an action pushed in is reverted by the next keystroke.
+- **Raised messages have nowhere to live.** Declared `x-inflow-notif` help still renders (it comes from the UI schema), but a message an action raises goes to your `onNotify` if you configured one and to the console if you didn't, rather than appearing at its field.
+
+Everything else — buttons, patches, status — behaves identically.
 
 ## Styling
 
@@ -197,10 +222,17 @@ The layout tester covers `VerticalLayout`, `HorizontalLayout`, `Group`, `Categor
 - **A checkbox stays a checkbox.** Vanilla gives every wrapped input `flex: 1`, which stretches a checkbox across the whole field. Inside a decorated control it is reset to its natural size (the host still decides what that is). Checkbox and radio controls keep the plain flex row — "box then label" is already right for them.
 - **`above` / `below` buttons don't stretch** to the field's full width and read as banners.
 
-Everything visible is still yours. Three class names are the whole contract:
+- **Notifications are laid out, not decorated.** A row under the field, wrapping, with a dismiss control out of the flow. The one exception in the whole stylesheet is severity colour: telling an error from a help line is the entire point of a notification, so `.inflow-notif-error` &c. take theirs from `--inflow-danger` / `--inflow-warning` / `--inflow-success` / `--inflow-fg-muted`, falling back to `currentColor` wherever a hue would be a guess about your surface. Set the variables, override the classes, or claim the message in `onNotify` and none of it renders.
+
+Everything visible is still yours. Four class names are the whole contract:
 
 ```ts
-theme: { containerClass: 'my-field', buttonClass: 'my-btn', iconButtonClass: 'my-btn-icon' }
+theme: {
+  containerClass: 'my-field',
+  buttonClass: 'my-btn',
+  iconButtonClass: 'my-btn-icon',
+  notifClass: 'my-alert',
+}
 ```
 
 Those land alongside the package's own classes, and every rule is scoped inside the `.inflow-*` elements this package renders — none of them reach markup it doesn't own.
@@ -231,12 +263,86 @@ Geometry only, again — no colour, spacing or type. It is opt-in rather than pa
 
 **One note if you write these yourself instead:** if your stylesheet is loaded *before* `vanilla.css`, it loses every equal-specificity tie to it. Scope your form rules under one wrapper class (`.my-form .my-input`) and they win regardless of order.
 
-## Telling the user something
+## Saying something (`x-inflow-notif`)
 
-An action's signature is `void`, so the line under the form is the only channel it has. `<InflowForm>` renders it, and the `status` slot is how you render it in your own design system:
+A form has things to say that are not field values: *this is what the token is for*, *the site accepted it*, *no assignable user matches "mehdi"*, *re-authorise before this runs at 3am*. Before this key existed, a plugin author's only way to say any of them was to add a readonly `lookupStatus` string property to the schema and patch text into it — the form pretending to have a field it does not have, and the host with no way to know that this one is a message and the others are data.
+
+`x-inflow-notif` is that vocabulary, declared **per field**:
+
+```jsonc
+{
+  "type": "Control",
+  "scope": "#/properties/apiToken",
+  "x-inflow-notif": [
+    { "severity": "help", "message": "Create one at id.atlassian.com → Security → API tokens." },
+    { "display": "dialog" }
+  ]
+}
+```
+
+An entry with a `message` **is** a message — declared help, a standing warning — and renders as soon as the field does. An entry without one declares the **channel**: how messages that arrive at this field later want to be shown.
+
+### The same key raises one at runtime
+
+A meta function returns it beside the rest of its answer, and it is lifted out before the patch is applied:
+
+```json
+{
+  "issueKey": "OPS-42",
+  "x-inflow-notif": { "severity": "success", "message": "Issue: OPS-42 — Rotate the staging certs" }
+}
+```
+
+```ts
+// or, from an action
+ctx.notify({ severity: 'error', display: 'dialog', message: '401 — the token was rejected.' })
+ctx.notify('Connected as mehdi@acme.io')   // a bare string is the common case
+```
+
+| Field | |
+|---|---|
+| `message` | The text. **Empty or absent clears the channel** rather than raising a blank one. |
+| `severity` | `help` · `info` · `success` · `warning` · `error`. Defaults to `info`. |
+| `display` | `inline` · `banner` · `toast` · `dialog`. A *request* — see below. Defaults to the field's declared channel, else `inline`. |
+| `field` | Which field it is about. Defaults to the one the action drives (`action.target`, else its own control). |
+| `id` | Which channel on that field it occupies. |
+| `title`, `timeout`, `dismissible` | Optional. `timeout` is ms until it clears itself. |
+
+**Messages replace by `(field, id)`.** Press a lookup twice and the second answer supersedes the first instead of stacking under it — the behaviour every plugin author hand-rolls with a status property today. Give a field two ids when it genuinely has two live messages (a validity line *and* a quota warning).
+
+### The host decides where it appears
+
+```ts
+onNotify(event) {
+  if (event.severity === 'error') { myToasts.danger(event.message); return true }
+  if (event.display === 'dialog') { myDialog.alert(event); return true }
+  // returning nothing = "seen, not handled"
+}
+```
+
+**Return `true` to claim a message.** That is the whole protocol. A claimed message is yours to show — as a toast, a modal, a desktop notification, a log line, whatever this platform has — and the package renders nothing for it. Return anything else and you have merely observed it: the message still appears inline at its field.
+
+That asymmetry is deliberate. `display` is a request, not an instruction, because only the host knows what its platform can do — and a message that no host got round to wiring must not vanish. **Nothing is ever lost for want of a toast**, so implementing `onNotify` for errors only, or not at all, is a safe place to stop. A listener that *throws* is treated as one that did not claim.
+
+Configure it app-wide in `createInflowUi`, per form with `:on-notify`, or observe the traffic without taking responsibility for it via `@notification` (an event handler cannot return a value, so it cannot claim).
+
+### Where an unclaimed message renders
+
+| | |
+|---|---|
+| At its field | When that field's control carries either Inflow key — so it has a renderer to put it under. |
+| Under the form | Everything else: messages addressed to no field, and ones whose field is a plain control or was dropped by a re-rendered schema. |
+
+Both are slottable, and both are plain by design:
 
 ```vue
-<InflowForm ...>
+<InflowForm ... :on-notify="onNotify" @notification="log">
+  <template #notifications="{ notifications, dismiss }">
+    <Alert v-for="n in notifications" :key="n.key" :tone="n.severity" @close="dismiss(n.key)">
+      {{ n.message }}
+    </Alert>
+  </template>
+
   <template #status="{ busy, status, error }">
     <Spinner v-if="busy" />
     <Alert v-else-if="error" tone="danger">{{ error }}</Alert>
@@ -245,13 +351,20 @@ An action's signature is `void`, so the line under the form is the only channel 
 </InflowForm>
 ```
 
-A transport failure lands in `error` on its own. A plugin's *own* failure does not: a meta function that answers `{"error": "..."}` is patching a field called `error` into the form, not raising one. So give every dependent-field group a readonly status property and write failures into it — it is the difference between "the button does nothing" and "no assignable user matches 'mehdi' — is the project key right?".
+### `notify` vs `setStatus` / `setError`
+
+They are different channels and both stay.
+
+- `setStatus` / `setError` are the **form's own line** — "working…", and the transport failures this package raises itself (`fn` unnamed, no plugin bound, a 502). Not about any field, not routed to the host.
+- `notify` is **about a field**, addressable, replaceable, and offered to the host first.
+
+A plugin's *own* failure is still not an error in the first sense — a meta function that answers `{"error": "..."}` is patching a field called `error` into the form. Answer with `x-inflow-notif` instead; it is the difference between "the button does nothing" and "no assignable user matches 'mehdi' — is the project key right?".
 
 Buttons disable themselves while their own action runs, and `busy` is counted, so two in flight at once don't have the first to finish clear the second's spinner.
 
 ## Exports
 
-Component `InflowForm`; renderers `InflowControlRenderer`, `InflowLayoutRenderer`, `InflowActionButton`; testers `inflowControlTester`, `inflowLayoutTester`, `inflowTesters`; plugin `InflowUiPlugin`, `createInflowUi`; the built-in `pluginFn` with its name as `PLUGIN_FN`, plus `builtinActions`, `builtinActionNames` and `withBuiltinActions`; the shape helpers `isFormEnvelope`, `normalizeFormEnvelope`, `patchFor`, `applyActionResult`; registry helpers `createInflowActionRegistry`, `resolveAction`; `createInflowFormController` and `useInflowActionContext` for building on top — plus the injection keys and all types.
+Component `InflowForm`; renderers `InflowControlRenderer`, `InflowLayoutRenderer`, `InflowActionButton`, `InflowNotifications`; testers `inflowControlTester`, `inflowLayoutTester`, `inflowTesters`; plugin `InflowUiPlugin`, `createInflowUi`; the built-in `pluginFn` with its name as `PLUGIN_FN`, plus `builtinActions`, `builtinActionNames` and `withBuiltinActions`; the shape helpers `isFormEnvelope`, `normalizeFormEnvelope`, `patchFor`, `applyActionResult`; the message helpers `NOTIF_KEY`, `buildNotification`, `splitNotifications`, `readNotifExtension`, `hasNotifExtension`, `notifDefaults`, `notificationKey`, `reportToConsole`; registry helpers `createInflowActionRegistry`, `resolveAction`; `createInflowFormController` and `useInflowActionContext` for building on top — plus the injection keys and all types.
 
 Enum and `oneOf` controls are deliberately left to the host's renderer set, so the package stays loosely coupled and compatible across JSON Forms versions.
 
@@ -262,6 +375,8 @@ pnpm test
 ```
 
 Covers the contract that matters across hosts: the flat request body, each answer shape, a re-render surviving the next keystroke, the Go SDK's `jsonschema`/`jsonui` spelling, envelope detection staying conservative, and a host overriding `pluginFn` by name.
+
+For messages: declared help rendering with no action fired, a field that carries only `x-inflow-notif` still reaching the renderer, the key being lifted out of a patch and out of a form envelope, an answer that is *nothing but* a message leaving the form's data alone, channels replacing rather than stacking, an empty message clearing one, and the claim protocol — including a listener that returns nothing or throws still leaving the message on screen.
 
 ## License
 

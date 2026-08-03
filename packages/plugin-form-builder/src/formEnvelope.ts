@@ -4,6 +4,7 @@ import type {
   InflowFormEnvelope,
   NormalizedFormEnvelope,
 } from './types'
+import { NOTIF_KEY, splitNotifications } from './notifications'
 
 /**
  * The keys a form envelope is allowed to consist of.
@@ -25,6 +26,10 @@ const ENVELOPE_KEYS = new Set([
   'data',
   'submit_to',
   'submitTo',
+  // A whole new form may arrive with something to say about it ("2 issues —
+  // pick one"), so the message key does not disqualify an envelope. It is
+  // stripped before the envelope is applied, and carries no schema of its own.
+  NOTIF_KEY,
 ])
 
 /** The keys that actually carry a schema. An envelope needs at least one. */
@@ -99,6 +104,11 @@ export function patchFor(result: unknown, target: string): Record<string, unknow
  * The default handling of an action's answer — the behaviour every action gets
  * unless it opts out by not calling this.
  *
+ * Anything the answer said under `x-inflow-notif` is taken out first and raised
+ * as a message, because it rides *alongside* the rest rather than instead of it:
+ * a lookup that resolved a key patches the key and says what it found, in one
+ * answer. What is left is then applied by shape.
+ *
  * Three shapes, in order:
  *
  * 1. A **form envelope** (schema and/or UI schema, optionally with data) replaces
@@ -122,11 +132,18 @@ export function applyActionResult(
 ): void {
   if (result === null || result === undefined) return
 
-  if (isFormEnvelope(result)) {
-    ctx.updateForm(result)
+  const { notifications, rest } = splitNotifications(result)
+  notifications.forEach((notification) => ctx.notify(notification))
+
+  if (isFormEnvelope(rest)) {
+    ctx.updateForm(rest)
     return
   }
 
+  // An answer that was nothing but messages has nothing left to patch. Writing
+  // the empty remainder to the field would blank whatever the user typed.
+  if (notifications.length > 0 && isPlainObject(rest) && Object.keys(rest).length === 0) return
+
   const target = options.target ?? ctx.config.target ?? ctx.path
-  ctx.updateData(patchFor(result, target))
+  ctx.updateData(patchFor(rest, target))
 }

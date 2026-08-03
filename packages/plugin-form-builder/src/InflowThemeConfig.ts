@@ -12,6 +12,13 @@ export interface InflowThemeConfig {
   buttonClass?: string
   /** Class applied to icon-only buttons */
   iconButtonClass?: string
+  /**
+   * Class applied to every rendered notification, alongside `.inflow-notif` and
+   * its severity modifier. One class for all severities: which of them looks
+   * like a warning is your design system's business, and `.inflow-notif-error`
+   * &c. are there to hang that off.
+   */
+  notifClass?: string
 }
 
 /**

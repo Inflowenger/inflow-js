@@ -4,7 +4,13 @@ import { JsonForms } from '@jsonforms/vue'
 import type { JsonSchema, UISchemaElement } from '@jsonforms/core'
 import type { InflowActionRegistry } from './InflowActionRegistry'
 import { InflowActionRegistryKey } from './InflowActionRegistry'
-import type { InflowFormEnvelope, InflowHostContext, InflowPluginCall } from './types'
+import type {
+  InflowFormEnvelope,
+  InflowHostContext,
+  InflowNotificationEvent,
+  InflowPluginCall,
+  InflowNotifyListener,
+} from './types'
 import { withBuiltinActions } from './actions'
 import {
   InflowFormControllerKey,
@@ -14,6 +20,7 @@ import {
 import { inflowControlTester, inflowLayoutTester } from './inflowTester'
 import InflowControlRenderer from './InflowControlRenderer.vue'
 import InflowLayoutRenderer from './InflowLayoutRenderer.vue'
+import InflowNotifications from './InflowNotifications.vue'
 
 /**
  * A plugin's form, rendered.
@@ -58,12 +65,21 @@ const props = withDefaults(
     settings?: Record<string, unknown>
     /** How to reach this plugin's meta functions. Falls back to the app-wide `call`. */
     call?: InflowPluginCall
+    /**
+     * Where this platform shows a message — a toast, a dialog, a desktop
+     * notification. Return `true` to claim one and this form renders nothing for
+     * it; anything else leaves it to appear inline at its field. Falls back to
+     * the app-wide `onNotify`.
+     */
+    onNotify?: InflowNotifyListener
     /** Actions for this form, merged over the app-wide registry and the built-ins. */
     actions?: InflowActionRegistry
     /** Render the built-in status / error line under the form. */
     showStatus?: boolean
+    /** Render the messages no field claimed, under the form. */
+    showNotifications?: boolean
   }>(),
-  { showStatus: true },
+  { showStatus: true, showNotifications: true },
 )
 
 const emit = defineEmits<{
@@ -74,6 +90,21 @@ const emit = defineEmits<{
    * carried a new form, so a host can persist what the user is now looking at.
    */
   (e: 'update:form', envelope: { schema?: JsonSchema; uischema?: UISchemaElement }): void
+  /**
+   * Something was said about this form — declared help is not re-emitted, but
+   * every message an action or the plugin raised is.
+   *
+   * Observation only: an event handler cannot answer, so it cannot claim the
+   * message. A host that wants to *take over* showing one passes `on-notify`
+   * (or configures it app-wide) and returns `true` from it.
+   *
+   * Named `notification` rather than `notify` because Vue resolves `emit('x')`
+   * against the vnode's `onX` prop — an emit called `notify` would fire the
+   * `onNotify` *listener* as well, calling it twice and letting a throw from it
+   * escape the guard that is supposed to keep a host's bug from eating the
+   * message.
+   */
+  (e: 'notification', event: InflowNotificationEvent): void
 }>()
 
 // ---- Live document ----------------------------------------------------------
@@ -82,6 +113,7 @@ const controller = createInflowFormController({
   schema: props.schema,
   uischema: props.uischema,
   data: props.data,
+  observe: (event) => emit('notification', event),
 })
 
 // The props stay authoritative: when the host swaps the form (a different action
@@ -111,12 +143,13 @@ const appHost = inject(InflowHostContextKey, undefined)
 // configures `call` once in main.ts, each form supplies the plugin and profile
 // it is bound to.
 watch(
-  () => [appHost?.value, props.pluginId, props.settings, props.call] as const,
+  () => [appHost?.value, props.pluginId, props.settings, props.call, props.onNotify] as const,
   () => {
     const next: InflowHostContext = { ...(appHost?.value ?? {}) }
     if (props.pluginId !== undefined) next.pluginId = props.pluginId
     if (props.settings !== undefined) next.settings = props.settings
     if (props.call !== undefined) next.call = props.call
+    if (props.onNotify !== undefined) next.onNotify = props.onNotify
     controller.host.value = next
   },
   { immediate: true, deep: true },
@@ -195,9 +228,27 @@ function onChange(event: { data: any; errors: any }) {
   emit('update:data', event.data)
 }
 
+// ---- Messages ---------------------------------------------------------------
+
+/**
+ * The messages no rendered field is showing: the ones addressed to the form as a
+ * whole, and the ones whose field has no Inflow renderer to put them under
+ * (a plain control, or one a re-rendered schema dropped). They collect here
+ * rather than vanishing — a message with nowhere to go is the bug this whole
+ * mechanism exists to remove.
+ */
+const looseNotifications = computed(() =>
+  controller.notifications.value.filter(
+    (event) => !event.field || !controller.isFieldClaimed(event.field),
+  ),
+)
+
 defineExpose({
   /** Replace the rendered form from outside — the same path an action's answer takes. */
   setForm: (envelope: InflowFormEnvelope) => controller.setForm(envelope),
+  /** Raise a message on this form from outside — the host's own half of the channel. */
+  notify: controller.notify,
+  clearNotifications: controller.clearNotifications,
   controller,
 })
 </script>
@@ -214,6 +265,14 @@ defineExpose({
       :readonly="readonly"
       @change="onChange"
     />
+
+    <!--
+      Messages no field is showing. Slot it to render them in your own design
+      system — or claim them in `onNotify` and render nothing here at all.
+    -->
+    <slot name="notifications" :notifications="looseNotifications" :dismiss="controller.dismiss">
+      <InflowNotifications v-if="showNotifications" :items="looseNotifications" />
+    </slot>
 
     <!--
       The only channel an action has to say anything: the contract returns void,
