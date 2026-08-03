@@ -51,11 +51,19 @@
    type — stays the host's, through the `containerClass` / `buttonClass` /
    `iconButtonClass` theme and its own control styles. Every rule below is
    scoped inside `.inflow-control-inner`, this package's own element, so it can
-   never reach markup it doesn't own, and every one is a single- or double-class
-   selector that a themed rule out-specifies.
+   never reach markup it doesn't own.
 
    Checkbox and radio controls are excluded: they render as "box then label" on
-   one line, which the flex row above already does correctly. --------------- */
+   one line, which the flex row above already does correctly.
+
+   These few rules are the exception to the light-selector rule the rest of this
+   file keeps: `:not()` takes the specificity of what it holds and `:has()` that
+   of its argument, so `:not(:has(input:is([type=…])))` is worth a class and an
+   element, and every rule carrying it scores that much above what it reads as.
+   That weight is load-bearing — the promotion below has to outrank the
+   `display: flex` a host puts on its own control class, or the control is never
+   promoted and the button drops to a row of its own. It also has to be kept
+   clear of this file's own placement rules; see the next two comments. ------ */
 .inflow-control-inner:not(:has(input:is([type='checkbox'], [type='radio']))) {
   display: grid;
   /* prepend | control | append. The side columns collapse to zero when unused,
@@ -68,7 +76,13 @@
   align-items: center;
 }
 
-.inflow-control-inner:not(:has(input:is([type='checkbox'], [type='radio']))) > * {
+/* The middle column, for whatever the control turned out to be. The two action
+   buttons are named out of it rather than left to the placement rules below:
+   those are plain double-class selectors, and the weight this one carries (see
+   above) would beat them and drag the button into the field's own column, on
+   top of the input. */
+.inflow-control-inner:not(:has(input:is([type='checkbox'], [type='radio'])))
+  > *:not(.inflow-position-prepend):not(.inflow-position-append) {
   grid-column: 2;
   min-width: 0;
 }

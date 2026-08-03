@@ -203,9 +203,12 @@ Everything visible is still yours. Three class names are the whole contract:
 theme: { containerClass: 'my-field', buttonClass: 'my-btn', iconButtonClass: 'my-btn-icon' }
 ```
 
-Those land alongside the package's own classes, so any rule of yours out-specifies the defaults above — all of which are scoped inside `.inflow-*` elements this package renders, and none of which touch markup it doesn't own.
+Those land alongside the package's own classes, and every rule is scoped inside the `.inflow-*` elements this package renders — none of them reach markup it doesn't own.
 
-The one default worth knowing about: promoting the control's rows uses `display: contents`, which drops the control element's own box. If you style that box (a border, a background) and want it kept, set `display: block` back on it — the button then aligns to the box's centre, as it did before.
+Two defaults are worth knowing about:
+
+- Promoting the control's rows uses `display: contents`, which drops the control element's own box. If you style that box (a border, a background) and want it kept, set `display: block` back on it — the button then aligns to the box's centre, as it did before. This rule is deliberately heavy: it has to outrank the `display: flex` a host puts on its own control class, or the promotion silently doesn't happen and the button drops to a row of its own below the field.
+- Because of that, the grid rules are not all single-class selectors: `:not()` and `:has()` carry the specificity of what they hold, so a rule guarded by `:not(:has(input:is([type='checkbox'], [type='radio'])))` weighs a class and an element more than it reads as. Overriding one takes a little more than one theme class. Everything outside that block — the buttons, the status line, the action chrome — is as light as it looks.
 
 ### On the vanilla renderer set
 
