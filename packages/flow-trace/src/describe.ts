@@ -22,6 +22,7 @@ import type {
   ProcStartDetail,
   ProgressLogFields,
   ProtocolLogFields,
+  ScopeFanoutFields,
 } from './types.js'
 
 /** `<target> via <edge>` — both ids, both resolvable. */
@@ -72,6 +73,15 @@ function describeLog(detail: LogDetail): string {
       const depends = d.depends ?? []
       const waited = d.waitedMs !== undefined ? ` after ${d.waitedMs}ms` : ''
       return `▶ all ${depends.length} dependencies arrived${waited}: ${depends.join(', ')}`
+    }
+    case 'scope.fanout': {
+      const d = detail as unknown as ScopeFanoutFields
+      const locations = d.locations ?? []
+      // `locations` is a capped sample, so say so rather than implying the list
+      // is the whole fan-out — `count` is the authority on how many passes ran.
+      const shown = locations.join(', ')
+      const more = d.count > locations.length ? `, … (+${d.count - locations.length})` : ''
+      return `⟳ scope ${d.scope} matched ${d.count} locations, one pass each: ${shown}${more}`
     }
     default:
       return typeof detail.msg === 'string' ? detail.msg : ''

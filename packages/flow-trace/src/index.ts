@@ -40,6 +40,7 @@ export {
   type ProcStartDetail,
   type ProgressLogFields,
   type ProtocolLogFields,
+  type ScopeFanoutFields,
 } from './types.js'
 
 export { isProcEvent, parseEvent, type ParseResult, type RejectReason } from './parse.js'

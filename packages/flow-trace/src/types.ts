@@ -106,7 +106,7 @@ export interface LogDetail {
 }
 
 /** Sub-class of a `log` event, carried in {@link LogDetail.category}. */
-export type LogCategory = 'protocol' | 'progress' | 'dep.wait' | 'dep.ready'
+export type LogCategory = 'protocol' | 'progress' | 'dep.wait' | 'dep.ready' | 'scope.fanout'
 
 /** The human-readable content of a progress frame. */
 export interface Frame {
@@ -169,6 +169,24 @@ export interface DepReadyFields {
   category: 'dep.ready'
   depends: string[]
   waitedMs: number
+}
+
+/**
+ * Fields on a `log` event with `category: 'scope.fanout'` — a node whose `scope`
+ * matched more than one location. The engine runs the node once per location,
+ * sequentially, but still emits a single `node.enter` / `node.exit` pair around
+ * the whole set, so this line is the only thing that makes that loop visible.
+ *
+ * `count` is the true number of passes; `locations` is the resolved json path of
+ * each one and is capped by the producer, so a large fan-out lists a sample
+ * rather than every element — trust `count`, not `locations.length`.
+ */
+export interface ScopeFanoutFields {
+  category: 'scope.fanout'
+  /** The node's `scope` as written, e.g. `$.orders[*]`. */
+  scope: string
+  count: number
+  locations: string[]
 }
 
 /** One event off the wire. */
