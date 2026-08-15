@@ -119,6 +119,23 @@ test('describes a join waiting, giving up, and being released', () => {
   )
 })
 
+test('describes a resume applied and a resume skipped', () => {
+  assert.equal(
+    describeEvent(event('log', { category: 'resume', seededNodes: 3, joinWatermarks: 1 })),
+    '↻ resumed from snapshot: seeded 3 node(s), 1 join watermark(s)',
+  )
+  // The skipped variant carries only msg (no counts).
+  assert.equal(
+    describeEvent(
+      event('log', {
+        category: 'resume',
+        msg: 'resume requested but snapshot not applied (flow definition changed since the snapshot was taken) — continuing with blank state',
+      }),
+    ),
+    'resume requested but snapshot not applied (flow definition changed since the snapshot was taken) — continuing with blank state',
+  )
+})
+
 test('an unknown kind still describes itself', () => {
   assert.equal(describeEvent(event('node.warp', {})), 'node.warp')
 })

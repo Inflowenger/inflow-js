@@ -40,6 +40,7 @@ export {
   type ProcStartDetail,
   type ProgressLogFields,
   type ProtocolLogFields,
+  type ResumeFields,
   type ScopeFanoutFields,
 } from './types.js'
 

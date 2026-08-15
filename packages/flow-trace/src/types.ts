@@ -106,7 +106,13 @@ export interface LogDetail {
 }
 
 /** Sub-class of a `log` event, carried in {@link LogDetail.category}. */
-export type LogCategory = 'protocol' | 'progress' | 'dep.wait' | 'dep.ready' | 'scope.fanout'
+export type LogCategory =
+  | 'protocol'
+  | 'progress'
+  | 'dep.wait'
+  | 'dep.ready'
+  | 'scope.fanout'
+  | 'resume'
 
 /** The human-readable content of a progress frame. */
 export interface Frame {
@@ -187,6 +193,23 @@ export interface ScopeFanoutFields {
   scope: string
   count: number
   locations: string[]
+}
+
+/**
+ * Fields on a `log` event with `category: 'resume'` — a run continuing an
+ * earlier one over the same context. The traversal snapshot the previous run
+ * left in the context header has been reloaded, so a join downstream of the
+ * resume point sees its already-completed dependencies instead of locking.
+ *
+ * The applied variant (emitted at `info`) carries `seededNodes` and
+ * `joinWatermarks`. The skipped variant (emitted at `warn`) carries neither —
+ * only `msg` — meaning a resume was requested but the snapshot was absent or the
+ * flow drifted since it was taken, so the run continues with blank state.
+ */
+export interface ResumeFields {
+  category: 'resume'
+  seededNodes?: number
+  joinWatermarks?: number
 }
 
 /** One event off the wire. */

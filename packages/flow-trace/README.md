@@ -49,7 +49,7 @@ const state = replay(lines).get(pid)
 | `node:enter` / `node:exit` | A node starts / settles | `node`, `status`, `error` |
 | `jump` | A GoTo transfers into another flow | `to`, `ret` |
 | `log` | Diagnostics from user code, a plugin, or the runtime | `level`, `src`, `msg`, `fields` |
-| ↳ | A log may be tagged with `fields.category` — `progress` (a sub-100% frame: `percent`, `frame`, optional `details`), `protocol` (an inflowV1 transport trace), or `dep.wait` / `dep.ready` (a join node parking on its inbound branches, then released) — so you can render it specially or hide it | see `ProgressLogFields`, `ProtocolLogFields`, `DepWaitFields`, `DepReadyFields` |
+| ↳ | A log may be tagged with `fields.category` — `progress` (a sub-100% frame: `percent`, `frame`, optional `details`), `protocol` (an inflowV1 transport trace), `dep.wait` / `dep.ready` (a join node parking on its inbound branches, then released), `scope.fanout` (a node whose `scope` matched several locations), or `resume` (a run continuing an earlier one: the traversal snapshot was reloaded, or — at `warn`, with no counts — the resume was skipped) — so you can render it specially or hide it | see `ProgressLogFields`, `ProtocolLogFields`, `DepWaitFields`, `DepReadyFields`, `ScopeFanoutFields`, `ResumeFields` |
 | `finish` | The process ends | `status`, `durationMs`, `error` |
 | `gap` | Events were lost | `from`, `count` |
 | `skip` | A message wasn't a usable v1 event | `reason` |

@@ -22,6 +22,7 @@ import type {
   ProcStartDetail,
   ProgressLogFields,
   ProtocolLogFields,
+  ResumeFields,
   ScopeFanoutFields,
 } from './types.js'
 
@@ -82,6 +83,16 @@ function describeLog(detail: LogDetail): string {
       const shown = locations.join(', ')
       const more = d.count > locations.length ? `, … (+${d.count - locations.length})` : ''
       return `⟳ scope ${d.scope} matched ${d.count} locations, one pass each: ${shown}${more}`
+    }
+    case 'resume': {
+      const d = detail as unknown as ResumeFields
+      // The applied variant carries counts; the skipped variant (warn) carries
+      // only `msg` — a resume asked for but not applied (no snapshot, or the flow
+      // drifted), so the run continued with blank state.
+      if (d.seededNodes !== undefined) {
+        return `↻ resumed from snapshot: seeded ${d.seededNodes} node(s), ${d.joinWatermarks ?? 0} join watermark(s)`
+      }
+      return typeof detail.msg === 'string' ? detail.msg : '↻ resume skipped — continuing with blank state'
     }
     default:
       return typeof detail.msg === 'string' ? detail.msg : ''
