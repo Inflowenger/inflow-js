@@ -365,3 +365,123 @@
   color: var(--inflow-danger, #ef4444);
   margin-left: 2px;
 }
+
+/* ---------------------------------------------------------------------------
+   Multi-select combo box (MultiEnumControlRenderer)
+   ---------------------------------------------------------------------------
+   A themed combo box for an array-of-enum, in place of vanilla's checkbox
+   column. Same colour sourcing as the oneOf block: every hue is an `--inflow-*`
+   variable with a theme-adaptive fallback, never a literal that would assume a
+   light surface. Geometry is the package's; colours are the host's. ------- */
+.inflow-multienum {
+  position: relative;
+}
+
+.inflow-multienum-trigger {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  min-height: 32px;
+  text-align: left;
+  cursor: pointer;
+}
+
+.inflow-multienum-trigger[disabled] {
+  cursor: default;
+  opacity: 0.6;
+}
+
+.inflow-multienum-placeholder {
+  flex: 1;
+  color: var(--inflow-fg-muted, color-mix(in srgb, currentColor 60%, transparent));
+}
+
+.inflow-multienum-chips {
+  flex: 1;
+  display: flex;
+  flex-wrap: wrap;
+  gap: 4px;
+  min-width: 0;
+}
+
+.inflow-multienum-chip {
+  display: inline-flex;
+  align-items: center;
+  gap: 4px;
+  padding: 1px 6px;
+  font-size: 11px;
+  line-height: 1.6;
+  border-radius: 999px;
+  background: var(--inflow-accent-soft, color-mix(in srgb, currentColor 15%, transparent));
+  color: var(--inflow-accent, inherit);
+}
+
+.inflow-multienum-chip-x {
+  cursor: pointer;
+  font-size: 13px;
+  line-height: 1;
+  opacity: 0.7;
+}
+
+.inflow-multienum-chip-x:hover {
+  opacity: 1;
+}
+
+.inflow-multienum-caret {
+  flex: 0 0 auto;
+  font-size: 10px;
+  opacity: 0.7;
+}
+
+.inflow-multienum-panel {
+  position: absolute;
+  z-index: 40;
+  left: 0;
+  right: 0;
+  margin-top: 2px;
+  max-height: 220px;
+  overflow-y: auto;
+  padding: 4px;
+  border: 1px solid var(--inflow-border, color-mix(in srgb, currentColor 30%, transparent));
+  border-radius: 6px;
+  background: var(--inflow-bg, canvas);
+  box-shadow: 0 6px 18px color-mix(in srgb, currentColor 20%, transparent);
+}
+
+.inflow-multienum-option {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  padding: 5px 8px;
+  font-size: 12px;
+  border-radius: 4px;
+  cursor: pointer;
+  color: var(--inflow-fg, inherit);
+}
+
+.inflow-multienum-option:hover {
+  background: var(--inflow-accent-soft, color-mix(in srgb, currentColor 12%, transparent));
+}
+
+.inflow-multienum-mark {
+  flex: 0 0 auto;
+  width: 12px;
+  color: var(--inflow-accent, currentColor);
+}
+
+.inflow-multienum-optlabel {
+  min-width: 0;
+  overflow-wrap: anywhere;
+}
+
+.inflow-multienum-empty {
+  padding: 6px 8px;
+  font-size: 12px;
+  color: var(--inflow-fg-muted, inherit);
+}
+
+.inflow-multienum-desc {
+  margin: 2px 0 0;
+  font-size: 11px;
+  color: var(--inflow-fg-muted, inherit);
+}

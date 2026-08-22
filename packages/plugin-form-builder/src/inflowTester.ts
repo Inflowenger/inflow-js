@@ -1,4 +1,11 @@
-import { rankWith, and, isControl, type RankedTester, type UISchemaElement } from '@jsonforms/core'
+import {
+  rankWith,
+  and,
+  isControl,
+  schemaMatches,
+  type RankedTester,
+  type UISchemaElement,
+} from '@jsonforms/core'
 import { hasNotifExtension } from './notifications'
 
 /**
@@ -44,13 +51,42 @@ export const inflowLayoutTester: RankedTester = rankWith(
 )
 
 /**
+ * Tester for a multi-select control: an array whose items are a fixed set
+ * (`items.enum`, or `items.oneOf` of `{const,title}`).
+ *
+ * The vanilla set draws this as a column of checkboxes; MultiEnumControlRenderer
+ * draws it as a themed combo box instead. Rank 20 clears the vanilla array
+ * renderer (~3) but stays well under inflowControlTester (1000), so a field that
+ * ALSO carries an `x-inflow-ui` button is still wrapped by InflowControlRenderer
+ * and then re-dispatched to this renderer for the inner widget.
+ *
+ * Unlike the two testers above this one matches on SCHEMA SHAPE, not on an
+ * Inflow tag — so it is not part of `inflowTesters` (the set filtered out when
+ * InflowControlRenderer re-dispatches to the original renderer); it must survive
+ * that filter so a decorated multi-enum keeps its combo box.
+ */
+export const multiEnumControlTester: RankedTester = rankWith(
+  20,
+  and(
+    isControl,
+    schemaMatches(
+      (schema) =>
+        !!schema &&
+        schema.type === 'array' &&
+        !!schema.items &&
+        !Array.isArray(schema.items) &&
+        (Array.isArray((schema.items as any).enum) || Array.isArray((schema.items as any).oneOf)),
+    ),
+  ),
+)
+
+/**
  * All Inflow UI testers.
  * Used to filter out Inflow renderers when delegating to original renderers.
  *
- * Note: Inflow only registers renderers that are strictly opt-in via the
- * `x-inflow-ui` / `x-inflow-notif` tags. Enum and oneOf controls are
- * intentionally left to the host's renderer set (e.g. vanilla) so the package
- * stays loosely coupled and compatible across JSON Forms versions.
+ * Note: this holds only the tag-driven wrappers (control + layout). The
+ * schema-driven multiEnumControlTester is deliberately NOT here — it is a real
+ * widget the inner DispatchRenderer should still be able to resolve.
  */
 export const inflowTesters: RankedTester[] = [inflowControlTester, inflowLayoutTester]
 

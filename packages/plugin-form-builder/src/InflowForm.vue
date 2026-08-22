@@ -17,9 +17,10 @@ import {
   InflowHostContextKey,
   createInflowFormController,
 } from './InflowFormController'
-import { inflowControlTester, inflowLayoutTester } from './inflowTester'
+import { inflowControlTester, inflowLayoutTester, multiEnumControlTester } from './inflowTester'
 import InflowControlRenderer from './InflowControlRenderer.vue'
 import InflowLayoutRenderer from './InflowLayoutRenderer.vue'
+import MultiEnumControlRenderer from './MultiEnumControlRenderer.vue'
 import InflowNotifications from './InflowNotifications.vue'
 
 /**
@@ -207,6 +208,11 @@ const renderers = computed(() => {
   return markRaw([
     { tester: inflowControlTester, renderer: markRaw(InflowControlRenderer) },
     { tester: inflowLayoutTester, renderer: markRaw(InflowLayoutRenderer) },
+    // Schema-driven widget: a multi-select combo box for array-of-enum, which
+    // vanilla would otherwise draw as a column of checkboxes. Kept in the set
+    // InflowControlRenderer re-dispatches to, so a decorated multi-enum still
+    // gets the combo box (see multiEnumControlTester).
+    { tester: multiEnumControlTester, renderer: markRaw(MultiEnumControlRenderer) },
     ...host.map((r) => {
       const entry = toRaw(r)
       return { tester: entry.tester, renderer: markRaw(toRaw(entry.renderer)) }
