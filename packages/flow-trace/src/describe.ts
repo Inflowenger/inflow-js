@@ -24,6 +24,7 @@ import type {
   ProtocolLogFields,
   ResumeFields,
   ScopeFanoutFields,
+  StopOnErrorFields,
 } from './types.js'
 
 /** `<target> via <edge>` — both ids, both resolvable. */
@@ -93,6 +94,12 @@ function describeLog(detail: LogDetail): string {
         return `↻ resumed from snapshot: seeded ${d.seededNodes} node(s), ${d.joinWatermarks ?? 0} join watermark(s)`
       }
       return typeof detail.msg === 'string' ? detail.msg : '↻ resume skipped — continuing with blank state'
+    }
+    case 'stop.on.error': {
+      const d = detail as unknown as StopOnErrorFields
+      // Name the cause: this line is read on its own as often as it is read next
+      // to the error that caused it.
+      return `✂ stopped here — ${d.pruned} outgoing edge(s) pruned: ${d.cause}`
     }
     default:
       return typeof detail.msg === 'string' ? detail.msg : ''

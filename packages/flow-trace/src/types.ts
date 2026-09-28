@@ -102,6 +102,10 @@ export interface FlowJumpDetail {
 export interface LogDetail {
   msg?: string
   category?: LogCategory
+  /** Present on an error the run recorded — see {@link ErrorLogFields}. */
+  code?: number
+  /** Present on an error the run recorded — see {@link ErrorLogFields}. */
+  kind?: ErrorKind
   [field: string]: unknown
 }
 
@@ -113,6 +117,51 @@ export type LogCategory =
   | 'dep.ready'
   | 'scope.fanout'
   | 'resume'
+  | 'stop.on.error'
+
+/** Whose error a recorded one was, carried in {@link LogDetail.kind}. */
+export type ErrorKind = 'node' | 'system'
+
+/**
+ * Fields on an error-level `log` event the run *recorded* — one entered in the
+ * run's ledger in the context header (`_errors`) as well as published here, so a
+ * caller who was not watching the stream can still read back what the run hit.
+ *
+ * `kind` is the one worth rendering. `node` is the flow author's own — their js
+ * or rego, the node data they wrote, something their node called that did not
+ * deliver — and is what they can act on; `system` is the platform's, which
+ * nothing in the flow caused and nothing in the flow mends. An error-level log
+ * carrying neither field is a diagnostic somebody logged loudly, not one of the
+ * run's own errors, and a reader who conflates the two will send flow authors
+ * after outages they cannot fix.
+ *
+ * A flow does not stop for a node error — it is handled and the run carries on —
+ * so a run that emitted several of these can still finish `completed`.
+ */
+export interface ErrorLogFields {
+  msg: string
+  code: number
+  kind: ErrorKind
+}
+
+/**
+ * Fields on a `log` event with `category: 'stop.on.error'` — a branch cut short
+ * because the node did not deliver and the run was started with `stop_on_error`.
+ * The node's outgoing edges were pruned, so nothing continues past it. The
+ * process is NOT stopped: every other branch runs to its end.
+ *
+ * It is the only record that a branch ended by decision rather than by reaching
+ * its last node, and it is emitted at `warn`. `pruned` is how many edges were
+ * dropped; `code` and `cause` name the error that did it — the same error is the
+ * event immediately before this one, but the line is meant to read on its own,
+ * out of a filter or a week later.
+ */
+export interface StopOnErrorFields {
+  category: 'stop.on.error'
+  pruned: number
+  code: number
+  cause: string
+}
 
 /** The human-readable content of a progress frame. */
 export interface Frame {

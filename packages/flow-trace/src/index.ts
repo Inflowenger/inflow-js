@@ -24,6 +24,8 @@ export {
   type EdgeRef,
   type EdgeReason,
   type EdgeSelectDetail,
+  type ErrorKind,
+  type ErrorLogFields,
   type EventKind,
   type ExitStatus,
   type FinishStatus,
@@ -42,6 +44,7 @@ export {
   type ProtocolLogFields,
   type ResumeFields,
   type ScopeFanoutFields,
+  type StopOnErrorFields,
 } from './types.js'
 
 export { isProcEvent, parseEvent, type ParseResult, type RejectReason } from './parse.js'
