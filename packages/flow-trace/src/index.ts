@@ -45,6 +45,7 @@ export {
   type ResumeFields,
   type ScopeFanoutFields,
   type StopOnErrorFields,
+  type PluginNeverStartedFields,
 } from './types.js'
 
 export { isProcEvent, parseEvent, type ParseResult, type RejectReason } from './parse.js'

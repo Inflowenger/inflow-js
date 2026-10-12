@@ -25,6 +25,7 @@ import type {
   ResumeFields,
   ScopeFanoutFields,
   StopOnErrorFields,
+  PluginNeverStartedFields,
 } from './types.js'
 
 /** `<target> via <edge>` — both ids, both resolvable. */
@@ -100,6 +101,13 @@ function describeLog(detail: LogDetail): string {
       // Name the cause: this line is read on its own as often as it is read next
       // to the error that caused it.
       return `✂ stopped here — ${d.pruned} outgoing edge(s) pruned: ${d.cause}`
+    }
+    case 'plugin.never.started': {
+      const d = detail as unknown as PluginNeverStartedFields
+      // Say that the plugin did not run, not just that edges were pruned: the
+      // reader's next move is to start it, and this cut happens whatever
+      // stop_on_error says — so the stop-on-error wording would misinform.
+      return `✂ plugin never ran — ${d.pruned} outgoing edge(s) pruned, nothing selected a route: ${d.cause}`
     }
     default:
       return typeof detail.msg === 'string' ? detail.msg : ''

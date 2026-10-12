@@ -118,6 +118,7 @@ export type LogCategory =
   | 'scope.fanout'
   | 'resume'
   | 'stop.on.error'
+  | 'plugin.never.started'
 
 /** Whose error a recorded one was, carried in {@link LogDetail.kind}. */
 export type ErrorKind = 'node' | 'system'
@@ -158,6 +159,33 @@ export interface ErrorLogFields {
  */
 export interface StopOnErrorFields {
   category: 'stop.on.error'
+  pruned: number
+  code: number
+  cause: string
+}
+
+/**
+ * Fields on a `log` event with `category: 'plugin.never.started'` — a plugin
+ * node's branch cut short because its plugin never started the job: nothing
+ * answered the init request, the handshake timed out, or there was no connection
+ * to carry it.
+ *
+ * Unlike {@link StopOnErrorFields} this cut does NOT depend on the run's
+ * `stop_on_error` setting, and that difference is the thing to render. A plugin
+ * node routes by the tags its plugin announces, and the engine prunes only what
+ * the plugin asked it to — which outbound port a plugin takes is the plugin
+ * developer's decision. So a plugin that never ran announced nothing, and
+ * "continue past errors" would otherwise mean taking EVERY edge of that node at
+ * once: a node with five tool ports and an exception port firing all six, which
+ * inside a loop compounds a frame at a time.
+ *
+ * Emitted at `warn`, with the same fields as its sibling: `pruned` is how many
+ * edges were dropped, `code` and `cause` name the init failure (the engine's
+ * `NoAnyRespond`). The fix is almost always to bring the plugin up, so the line
+ * is written to read on its own.
+ */
+export interface PluginNeverStartedFields {
+  category: 'plugin.never.started'
   pruned: number
   code: number
   cause: string
