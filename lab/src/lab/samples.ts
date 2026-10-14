@@ -147,6 +147,73 @@ const buttonPositions: Sample = {
   },
 }
 
+const decoratedPickers: Sample = {
+  id: 'pickers',
+  label: 'Pickers with buttons',
+  about:
+    "A button beside a control that is taller than one line. Each field here has a description under it, and the multi-select is taller still — the button must stay on the INPUT's row in every one of them, not drift down beside the description. Every button runs `noop`; placement is the whole subject.",
+  schema: {
+    type: 'object',
+    properties: {
+      model: {
+        type: 'string',
+        title: 'Model',
+        description: 'A plain text field with something to say underneath it.',
+      },
+      tools: {
+        type: 'array',
+        title: 'Tools',
+        description:
+          'A multi-select: an array whose items carry the choices. The description runs long on purpose — this is the case that used to push the button a row down.',
+        uniqueItems: true,
+        items: {
+          type: 'string',
+          oneOf: [
+            { const: 'Read', title: 'Read — open a file on the host' },
+            { const: 'Bash', title: 'Bash — run a shell command' },
+            { const: 'WebSearch', title: 'WebSearch — search the web' },
+          ],
+        },
+      },
+      notes: {
+        type: 'string',
+        title: 'Notes',
+        description: 'A text area, for the same reason.',
+      },
+    },
+  },
+  ui: {
+    type: 'VerticalLayout',
+    elements: [
+      {
+        type: 'Control',
+        scope: '#/properties/model',
+        'x-inflow-ui': {
+          action: { name: 'noop' },
+          button: { position: 'append', icon: '\u21bb', label: 'List models' },
+        },
+      },
+      {
+        type: 'Control',
+        scope: '#/properties/tools',
+        'x-inflow-ui': {
+          action: { name: 'noop' },
+          button: { position: 'append', icon: '\u21bb', label: 'Refresh from host' },
+        },
+      },
+      {
+        type: 'Control',
+        scope: '#/properties/notes',
+        options: { multi: true },
+        'x-inflow-ui': {
+          action: { name: 'noop' },
+          button: { position: 'append', label: 'Fill' },
+        },
+      },
+    ],
+  },
+}
+
 const unknownAction: Sample = {
   id: 'unknown-action',
   label: 'Unknown action',
@@ -173,7 +240,7 @@ const unknownAction: Sample = {
   },
 }
 
-export const samples: Sample[] = [jiraConnector, buttonPositions, unknownAction]
+export const samples: Sample[] = [jiraConnector, buttonPositions, decoratedPickers, unknownAction]
 
 /**
  * Seed form data from the schema's `default`s, nested objects included.

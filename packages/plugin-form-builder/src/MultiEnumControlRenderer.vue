@@ -95,45 +95,57 @@ onBeforeUnmount(() => document.removeEventListener('click', onDocClick, true))
       {{ label }}<span v-if="required" class="inflow-required">*</span>
     </label>
 
-    <!-- Trigger: chips of what is chosen, or a placeholder -->
-    <button
-      type="button"
-      class="inflow-oneof-select inflow-multienum-trigger"
-      :aria-expanded="open"
-      :disabled="!enabled"
-      @click.stop="toggleOpen"
-    >
-      <span v-if="selected.length === 0" class="inflow-multienum-placeholder">Select…</span>
-      <span v-else class="inflow-multienum-chips">
-        <span v-for="v in selected" :key="v" class="inflow-multienum-chip">
-          {{ labelFor(v) }}
-          <span
-            v-if="enabled"
-            class="inflow-multienum-chip-x"
-            role="button"
-            :aria-label="`Remove ${labelFor(v)}`"
-            @click.stop="remove(v)"
-            >×</span
-          >
-        </span>
-      </span>
-      <span class="inflow-multienum-caret" aria-hidden="true">▾</span>
-    </button>
+    <!--
+      The input's own row: the trigger, and the panel anchored to it.
 
-    <!-- Panel: the toggleable options -->
-    <div v-if="open" class="inflow-multienum-panel" role="listbox" aria-multiselectable="true">
-      <div
-        v-for="o in options"
-        :key="o.value"
-        class="inflow-multienum-option"
-        role="option"
-        :aria-selected="selected.includes(o.value)"
-        @click.stop="toggle(o.value)"
+      The wrapper is not decoration. A decorated control (one carrying a lookup
+      button) is laid out as a grid whose rows this control's own rows are
+      promoted into, so that the button can sit beside the TRIGGER rather than
+      drift down beside the description — and a promoted box no longer positions
+      anything, so the panel needs a containing block of its own that survives
+      the promotion. See `.inflow-oneof-field` in inflow-ui.css.
+    -->
+    <div class="inflow-oneof-field">
+      <!-- Trigger: chips of what is chosen, or a placeholder -->
+      <button
+        type="button"
+        class="inflow-oneof-select inflow-multienum-trigger"
+        :aria-expanded="open"
+        :disabled="!enabled"
+        @click.stop="toggleOpen"
       >
-        <span class="inflow-multienum-mark">{{ selected.includes(o.value) ? '✓' : '' }}</span>
-        <span class="inflow-multienum-optlabel">{{ o.label }}</span>
+        <span v-if="selected.length === 0" class="inflow-multienum-placeholder">Select…</span>
+        <span v-else class="inflow-multienum-chips">
+          <span v-for="v in selected" :key="v" class="inflow-multienum-chip">
+            {{ labelFor(v) }}
+            <span
+              v-if="enabled"
+              class="inflow-multienum-chip-x"
+              role="button"
+              :aria-label="`Remove ${labelFor(v)}`"
+              @click.stop="remove(v)"
+              >×</span
+            >
+          </span>
+        </span>
+        <span class="inflow-multienum-caret" aria-hidden="true">▾</span>
+      </button>
+
+      <!-- Panel: the toggleable options -->
+      <div v-if="open" class="inflow-multienum-panel" role="listbox" aria-multiselectable="true">
+        <div
+          v-for="o in options"
+          :key="o.value"
+          class="inflow-multienum-option"
+          role="option"
+          :aria-selected="selected.includes(o.value)"
+          @click.stop="toggle(o.value)"
+        >
+          <span class="inflow-multienum-mark">{{ selected.includes(o.value) ? '✓' : '' }}</span>
+          <span class="inflow-multienum-optlabel">{{ o.label }}</span>
+        </div>
+        <div v-if="options.length === 0" class="inflow-multienum-empty">No options</div>
       </div>
-      <div v-if="options.length === 0" class="inflow-multienum-empty">No options</div>
     </div>
 
     <p v-if="description" class="inflow-multienum-desc">{{ description }}</p>

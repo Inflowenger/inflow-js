@@ -124,6 +124,51 @@
   grid-row: 4;
 }
 
+/* The same promotion for the controls this package draws itself.
+
+   `.control > .wrapper` above is the vanilla renderer set's structure, and a
+   control written here has no reason to borrow it — but it needs the same
+   treatment, or the button centres against the whole control and ends up beside
+   the description instead of the trigger. `:has(> .inflow-oneof-field)` is the
+   counterpart of the `:has(> .wrapper)` guard: promote only a control that has
+   rows to promote, and leave anything else as one cell in the middle column.
+
+   Written at the same weight as the vanilla rule above so the two cannot
+   out-rank each other, and so both clear a `display: flex` from a host theme. */
+.inflow-control-inner:not(:has(input:is([type='checkbox'], [type='radio'])))
+  > .inflow-oneof-control:has(> .inflow-oneof-field) {
+  display: contents;
+}
+
+.inflow-control-inner > .inflow-oneof-control > * {
+  grid-column: 2;
+  min-width: 0;
+}
+
+.inflow-control-inner > .inflow-oneof-control > .inflow-oneof-label {
+  grid-row: 1;
+}
+
+.inflow-control-inner > .inflow-oneof-control > .inflow-oneof-field {
+  grid-row: 2;
+}
+
+/* Row 3 is the validation row the vanilla structure puts an error on; these
+   controls have no error element of their own, so the description keeps row 4
+   and the gap stays where a reader expects it. */
+.inflow-control-inner > .inflow-oneof-control > .inflow-multienum-desc {
+  grid-row: 4;
+}
+
+/* A promoted box takes its own margins with it. The last row gives back the
+   space that `.inflow-oneof-control`'s margin-bottom held, so a decorated
+   control sits the same distance from the next field as an undecorated one. */
+.inflow-control-inner:has(> .inflow-oneof-control > .inflow-oneof-field)
+  > .inflow-oneof-control
+  > :last-child {
+  margin-bottom: 0.5rem;
+}
+
 /* Action elements */
 .inflow-action {
   display: inline-flex;
@@ -286,7 +331,9 @@
    invalid, and a browser drops the whole rule, which puts the button back on
    the label's row. */
 .inflow-control-inner:has(> .control > .wrapper) > .inflow-position-prepend,
-.inflow-control-inner:has(> .control > .wrapper) > .inflow-position-append {
+.inflow-control-inner:has(> .control > .wrapper) > .inflow-position-append,
+.inflow-control-inner:has(> .inflow-oneof-control > .inflow-oneof-field) > .inflow-position-prepend,
+.inflow-control-inner:has(> .inflow-oneof-control > .inflow-oneof-field) > .inflow-position-append {
   grid-row: 2;
 }
 
@@ -373,7 +420,13 @@
    column. Same colour sourcing as the oneOf block: every hue is an `--inflow-*`
    variable with a theme-adaptive fallback, never a literal that would assume a
    light surface. Geometry is the package's; colours are the host's. ------- */
-.inflow-multienum {
+/* The trigger's row, and the containing block the panel is anchored to.
+
+   It is on this box rather than on the control's root because the root is
+   dropped with `display: contents` when the control is decorated (see the
+   promotion rules above): a box that is not generated positions nothing, and an
+   absolutely positioned panel would escape to the drawer. */
+.inflow-oneof-field {
   position: relative;
 }
 

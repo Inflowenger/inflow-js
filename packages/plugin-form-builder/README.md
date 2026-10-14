@@ -177,6 +177,29 @@ The two keys are siblings, and either works alone: a field may have something to
 - `button.icon` is rendered as **literal text**, not looked up in an icon font. Use a character (`↻`), not `mdi-refresh`.
 - `button.label` should say what the button will do (`Find user`), because nothing fires automatically — there is no on-change hook and no type-ahead.
 
+## Picking several values
+
+An array whose items are a fixed set renders as a combo box — a trigger showing the chosen values as chips, and a drop-down of toggleable options — instead of the column of checkboxes the vanilla set would draw:
+
+```jsonc
+{
+  "type": "array",
+  "title": "Tools",
+  "uniqueItems": true,
+  "items": {
+    "type": "string",
+    "oneOf": [
+      { "const": "Read", "title": "Read — open a file on the host" },
+      { "const": "Bash", "title": "Bash — run a shell command" }
+    ]
+  }
+}
+```
+
+`items.enum` works too, where the value is also the label. The widget is chosen by schema shape, not by a tag, so a plugin gets it with no UI schema at all — and a field that *also* carries an `x-inflow-ui` button keeps it, with the button on the trigger's row.
+
+That last part is the reason the control's markup is what it is: `.inflow-oneof-control` holds a label, an `.inflow-oneof-field` (the trigger and the panel anchored to it) and a description, and the stylesheet promotes those three rows into the decorated control's grid so the button lines up with the trigger rather than drifting down beside the description. A renderer of your own that wants the same treatment should use the same two class names; the panel's `position: relative` belongs on `.inflow-oneof-field`, never on the control's root, which `display: contents` takes away.
+
 ## Using your own `<JsonForms>`
 
 `<InflowForm>` is a wrapper, not a requirement. The renderers work under a bare `<JsonForms>`:
@@ -364,9 +387,9 @@ Buttons disable themselves while their own action runs, and `busy` is counted, s
 
 ## Exports
 
-Component `InflowForm`; renderers `InflowControlRenderer`, `InflowLayoutRenderer`, `InflowActionButton`, `InflowNotifications`; testers `inflowControlTester`, `inflowLayoutTester`, `inflowTesters`; plugin `InflowUiPlugin`, `createInflowUi`; the built-in `pluginFn` with its name as `PLUGIN_FN`, plus `builtinActions`, `builtinActionNames` and `withBuiltinActions`; the shape helpers `isFormEnvelope`, `normalizeFormEnvelope`, `patchFor`, `applyActionResult`; the message helpers `NOTIF_KEY`, `buildNotification`, `splitNotifications`, `readNotifExtension`, `hasNotifExtension`, `notifDefaults`, `notificationKey`, `reportToConsole`; registry helpers `createInflowActionRegistry`, `resolveAction`; `createInflowFormController` and `useInflowActionContext` for building on top — plus the injection keys and all types.
+Component `InflowForm`; renderers `InflowControlRenderer`, `InflowLayoutRenderer`, `MultiEnumControlRenderer`, `InflowActionButton`, `InflowNotifications`; testers `inflowControlTester`, `inflowLayoutTester`, `multiEnumControlTester`, `inflowTesters`; plugin `InflowUiPlugin`, `createInflowUi`; the built-in `pluginFn` with its name as `PLUGIN_FN`, plus `builtinActions`, `builtinActionNames` and `withBuiltinActions`; the shape helpers `isFormEnvelope`, `normalizeFormEnvelope`, `patchFor`, `applyActionResult`; the message helpers `NOTIF_KEY`, `buildNotification`, `splitNotifications`, `readNotifExtension`, `hasNotifExtension`, `notifDefaults`, `notificationKey`, `reportToConsole`; registry helpers `createInflowActionRegistry`, `resolveAction`; `createInflowFormController` and `useInflowActionContext` for building on top — plus the injection keys and all types.
 
-Enum and `oneOf` controls are deliberately left to the host's renderer set, so the package stays loosely coupled and compatible across JSON Forms versions.
+Single-value enum and `oneOf` controls are deliberately left to the host's renderer set, so the package stays loosely coupled and compatible across JSON Forms versions. The one exception is the array-of-enum multi-select above, which the vanilla set draws as a wall of checkboxes that inherits none of the form's styling.
 
 ## Tests
 
