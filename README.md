@@ -40,7 +40,7 @@ pnpm --filter @inflowenger/lab dev
 |---|---|---|
 | **Form Preview** | plugin-form-builder | A schema / UI-schema pair edited live, rendered through the Inflow renderers, with every action call listed alongside what it saw and the patch it wrote. |
 | **Debug Enum** | plugin-form-builder | A field carrying `x-inflow-ui` side by side with the same field without it. They must behave identically. |
-| **Sandboxed Renderers** | plugin-sandbox | One form document served three ways — declarative, Worker, iframe — with plain-JS, Vue and Preact guests. Toggle the theme while one is running; only the `renderer` field differs between them. |
+| **Sandboxed Renderers** | plugin-sandbox | One form document served three ways — declarative, Worker, iframe — with plain-JS, inline-code, Vue, React, and Preact guests. Toggle the theme while one is running; only the `renderer` field differs between them. |
 | **Run Replay** | flow-trace | A captured engine run fed to a tracker one message at a time, with controls to reorder, drop from, and pollute the stream. |
 
 The lab consumes the packages through `workspace:*` — their built entrypoints, exactly as an installed app does — so it exercises the exports map, the types, and `style.css` rather than the source behind them. A packaging mistake shows up there instead of in your app.
@@ -235,6 +235,8 @@ pnpm --filter @inflowenger/lab dev
 
 `plugin-form-builder` builds with Vite in library mode. Vue and JSON Forms are `peerDependencies` and stay external — the consuming app owns those, and bundling a second copy of Vue breaks reactivity in ways that are miserable to debug.
 
+Sandbox guests are compiled the other way: the lab keeps the framework source — for example [`lab/guests/vue/App.vue`](lab/guests/vue/App.vue) — and `pnpm --filter @inflowenger/lab build:guests` writes self-contained ES modules to `lab/public/guests/`. Edit the `.vue` file, rebuild, and serve or embed the generated `.js`; the source file remains the code you maintain. The full recipe is in [`packages/plugin-sandbox/README.md`](packages/plugin-sandbox/README.md#compiling-a-vue-sfc-without-losing-the-vue-file).
+
 The lab is the first place to try a change: leave `pnpm --filter <pkg> dev` running to rebuild on save, and the lab picks the new `dist` up. It renders both packages against data that ships with the repo, so a regression is visible without wiring anything up. `pnpm -r build` builds it too, which means CI typechecks the packages against a real consumer on every push.
 
 To try a change against a real app before publishing, link it:
@@ -254,7 +256,7 @@ git tag plugin-form-builder-v0.2.0
 git push origin plugin-form-builder-v0.2.0
 ```
 
-Tags are per-package (`plugin-form-builder-v*`, `flow-trace-v*`) — the two version independently, and there is no reason to drag one forward because the other moved. CI refuses to publish if the tag and the `package.json` version disagree.
+Tags are per-package (`plugin-form-builder-v*`, `plugin-sandbox-v*`, `flow-trace-v*`) — each version independently, and there is no reason to drag one forward because another moved. CI refuses to publish if the tag and the `package.json` version disagree.
 
 
 ## License

@@ -204,6 +204,68 @@ export default defineConfig({
 Build **one entry per bundle**. Given two, Rollup hoists shared code into a chunk
 imported by relative path, and neither sandbox can resolve such a path.
 
+### Compiling a Vue SFC without losing the `.vue` file
+
+Keep the SFC as the source of truth. The browser never downloads or parses the
+`.vue` file; Vite compiles its template to JavaScript, bundles Vue with it, and the
+sandbox receives one ordinary ES module.
+
+The runnable example lives in this repo:
+
+```text
+lab/guests/vue/App.vue      # the dialog, authored as a normal Vue SFC
+lab/guests/vue/main.ts      # createApp(App, { ctx }).mount(ctx.root)
+lab/vite.guests.config.ts   # @vitejs/plugin-vue + library-mode ES build
+```
+
+Build it with:
+
+```sh
+# from the repository root
+pnpm --filter @inflowenger/lab build:guests
+```
+
+That command keeps the sources in place and writes the deployable module here:
+
+```text
+lab/public/guests/vue.js
+```
+
+Use the generated file as a URL-served renderer:
+
+```jsonc
+{
+  "type": "remote",
+  "module": "https://plugin.example/ui/vue.js",
+  "framework": "vue"
+}
+```
+
+Or copy `vue.js` into a Go plugin and embed that generated bundle:
+
+```go
+//go:embed ui/renderer-vue.js
+var rendererBundle embed.FS
+
+form := formkit.New("Renderer smoke test").
+    Add(formkit.Text("message", "Message").Required()).
+    Renderer(formkit.MustRendererFS(
+        rendererBundle,
+        "ui/renderer-vue.js",
+        formkit.Framework("vue"),
+    )).
+    Build()
+```
+
+The workflow is: edit `App.vue`, run `build:guests`, copy or serve the generated
+`.js`. Commit the `.vue` and `main.ts` sources as the maintainable code. Treat the
+generated bundle as build output unless your deployment embeds it, as the Go sample
+does in `renderer-smoke`.
+
+The same pattern is used for React and Preact: framework source stays in
+`lab/guests/react.ts` or `lab/guests/preact.tsx`; the sandbox consumes only the
+compiled self-contained module in `lab/public/guests/`.
+
 ---
 
 ## Serving it from Go
