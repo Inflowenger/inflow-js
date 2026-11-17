@@ -15,6 +15,11 @@ export default createRouter({
       component: () => import('../pages/DebugEnumPage.vue'),
     },
     {
+      path: '/sandbox',
+      name: 'sandbox',
+      component: () => import('../pages/SandboxPage.vue'),
+    },
+    {
       path: '/flow-trace/replay',
       name: 'flow-trace-replay',
       component: () => import('../pages/FlowTracePage.vue'),

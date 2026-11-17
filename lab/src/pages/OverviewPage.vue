@@ -41,6 +41,27 @@ import { RouterLink } from 'vue-router'
 
     <div class="card">
       <div class="card-title">
+        @inflowenger/plugin-sandbox
+        <span class="badge accent">Vue</span>
+      </div>
+      <p class="hint" style="margin-bottom: 14px">
+        Some dialogs are not forms. A plugin can name a <code>renderer</code> on the document it
+        already serves and ship JavaScript instead — which the host then has to run without
+        trusting it, and without it looking pasted on.
+      </p>
+      <p style="margin: 0 0 8px">
+        <RouterLink to="/sandbox">Sandboxed Renderers →</RouterLink>
+      </p>
+      <p class="hint" style="margin: 0">
+        One form document served three ways — declarative, Web Worker, null-origin iframe — with
+        plain-JS, Vue and Preact guests. Only the <code>renderer</code> field differs. Toggle the
+        theme while one is running: the Worker guest follows because its nodes are <em>this</em>
+        page's nodes; the frame follows because the theme was serialised and injected into it.
+      </p>
+    </div>
+
+    <div class="card">
+      <div class="card-title">
         @inflowenger/flow-trace
         <span class="badge">framework-free</span>
       </div>

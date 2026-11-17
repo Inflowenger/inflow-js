@@ -1,0 +1,54 @@
+/*
+  The host's side of a sandboxed form.
+
+  Deliberately almost empty, and that is the point worth noticing: a `remote`
+  guest's nodes are host nodes, so they are styled by the host's own stylesheet
+  exactly as hand-written markup in the same drawer would be. There is no
+  `.inflow-sandbox button { ... }` here because there does not need to be one.
+
+  What *is* here is the handful of rules that are about the sandbox rather than
+  about the content: the frame's box, and the two states a guest can be in that
+  are the host's to render.
+*/
+
+.inflow-sandbox {
+  display: block;
+  color: inherit;
+  font: inherit;
+}
+
+/* The frame has no intrinsic size — a replaced element defaults to 300×150 —
+   so it is pinned to the content height the guest reports. Until the first
+   report it is collapsed rather than 150px of empty box. */
+.inflow-sandbox-frame {
+  display: block;
+  width: 100%;
+  height: 0;
+  transition: height 120ms ease-out;
+}
+
+.inflow-sandbox-frame > iframe {
+  display: block;
+  width: 100%;
+  height: 100%;
+  border: 0;
+  background: transparent;
+  color-scheme: inherit;
+}
+
+.inflow-sandbox-status,
+.inflow-sandbox-error {
+  margin: 0.25rem 0 0;
+  font-size: 11px;
+  line-height: 1.4;
+}
+
+.inflow-sandbox-status {
+  opacity: 0.7;
+}
+
+/* Uses the host's danger token when it has one and degrades to a plain red
+   when it does not — the package ships no palette of its own. */
+.inflow-sandbox-error {
+  color: var(--danger, #dc2626);
+}

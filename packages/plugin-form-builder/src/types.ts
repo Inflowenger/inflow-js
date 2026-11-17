@@ -29,6 +29,22 @@ export interface InflowFormEnvelope {
   submit_to?: string
   /** Alternate casing of `submit_to`. */
   submitTo?: string
+  /**
+   * Which engine should draw this form. Absent — as in every form that exists
+   * today — it means `jsonforms`, so nothing already deployed changes.
+   *
+   * A plugin whose dialog is not expressible as a schema (a query builder, a
+   * diff, a canvas, a table of rows to pick from) may instead name a code
+   * renderer and ship a module, which the host runs in a sandbox. This package
+   * does not *run* those — see `@inflowenger/plugin-sandbox`, which owns the
+   * renderers and the policy — but it carries the field, because the field
+   * travels on the same envelope as everything else and an envelope that
+   * dropped it would silently downgrade a plugin's dialog back to a form.
+   *
+   * Left deliberately loose (`string | object`): this package's job is to carry
+   * it intact, and the sandbox package is where it is parsed and defaulted.
+   */
+  renderer?: string | Record<string, unknown>
 }
 
 /** An envelope after parsing and alias resolution: what the renderer applies. */
@@ -37,6 +53,8 @@ export interface NormalizedFormEnvelope {
   uischema?: UISchemaElement
   data?: any
   hasData: boolean
+  /** Carried through untouched; `@inflowenger/plugin-sandbox` resolves it. */
+  renderer?: string | Record<string, unknown>
 }
 
 /**

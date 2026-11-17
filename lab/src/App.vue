@@ -14,6 +14,9 @@ import { RouterLink, RouterView } from 'vue-router'
       <RouterLink to="/form-builder/preview">Form Preview</RouterLink>
       <RouterLink to="/form-builder/debug-enum">Debug Enum</RouterLink>
 
+      <div class="lab-nav-group">plugin-sandbox</div>
+      <RouterLink to="/sandbox">Sandboxed Renderers</RouterLink>
+
       <div class="lab-nav-group">flow-trace</div>
       <RouterLink to="/flow-trace/replay">Run Replay</RouterLink>
     </nav>

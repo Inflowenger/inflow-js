@@ -26,6 +26,11 @@ const ENVELOPE_KEYS = new Set([
   'data',
   'submit_to',
   'submitTo',
+  // A form that names its renderer is still a form. Leaving this out would make
+  // such an envelope fail the "nothing but envelope keys" test and be applied as
+  // a data patch instead — writing a `renderer` field into the user's data and
+  // throwing the form away.
+  'renderer',
   // A whole new form may arrive with something to say about it ("2 issues —
   // pick one"), so the message key does not disqualify an envelope. It is
   // stripped before the envelope is applied, and carries no schema of its own.
@@ -86,7 +91,7 @@ export function normalizeFormEnvelope(envelope: InflowFormEnvelope): NormalizedF
   )
   const hasData = Object.prototype.hasOwnProperty.call(envelope, 'data')
 
-  return { schema, uischema, data: envelope.data, hasData }
+  return { schema, uischema, data: envelope.data, hasData, renderer: envelope.renderer }
 }
 
 /**

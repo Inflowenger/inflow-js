@@ -2,6 +2,7 @@
 #
 #   git tag plugin-form-builder-v0.2.0   && git push origin plugin-form-builder-v0.2.0
 #   git tag flow-trace-v0.2.0  && git push origin flow-trace-v0.2.0
+#   git tag plugin-sandbox-v0.1.0  && git push origin plugin-sandbox-v0.1.0
 #
 # The tag only selects which package to publish; the version that actually ships
 # is the one in its package.json. Bump and commit that first.
@@ -15,6 +16,7 @@ on:
     tags:
       - 'plugin-form-builder-v*'
       - 'flow-trace-v*'
+      - 'plugin-sandbox-v*'
 
 jobs:
   publish:
@@ -32,6 +34,7 @@ jobs:
           case "${GITHUB_REF_NAME}" in
             plugin-form-builder-v*)  echo "name=@inflowenger/plugin-form-builder"  >> "$GITHUB_OUTPUT" ;;
             flow-trace-v*) echo "name=@inflowenger/flow-trace" >> "$GITHUB_OUTPUT" ;;
+            plugin-sandbox-v*) echo "name=@inflowenger/plugin-sandbox" >> "$GITHUB_OUTPUT" ;;
             *) echo "::error::Tag ${GITHUB_REF_NAME} does not map to a package"; exit 1 ;;
           esac
 

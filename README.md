@@ -5,6 +5,7 @@ The JavaScript/TypeScript packages a frontend uses to talk to the Inflow ecosyst
 | Package | What it does | Depends on |
 |---|---|---|
 | [`@inflowenger/plugin-form-builder`](packages/plugin-form-builder) | Renders Inflow's `x-inflow-ui` schema extension as real form widgets — buttons wired to your own actions — on top of JSON Forms. | Vue 3, JSON Forms |
+| [`@inflowenger/plugin-sandbox`](packages/plugin-sandbox) | Runs a plugin's *own* UI code — Vue, React, anything compiled — inside your page, isolated, and inheriting your CSS and theme. For the dialogs a schema cannot describe. | Vue 3, Remote DOM |
 | [`@inflowenger/flow-trace`](packages/flow-trace) | Turns the Inflow process event stream into flow movement and completion: where the process is, which edges it took, whether it finished. | nothing |
 
 They are independent. Take one, take both.
@@ -14,7 +15,7 @@ They are independent. Take one, take both.
 ## Install
 
 ```sh
-pnpm add @inflowenger/plugin-form-builder @inflowenger/flow-trace
+pnpm add @inflowenger/plugin-form-builder @inflowenger/plugin-sandbox @inflowenger/flow-trace
 ```
 
 Public packages on the npm registry — no token, no `.npmrc`, nothing to configure.
@@ -39,6 +40,7 @@ pnpm --filter @inflowenger/lab dev
 |---|---|---|
 | **Form Preview** | plugin-form-builder | A schema / UI-schema pair edited live, rendered through the Inflow renderers, with every action call listed alongside what it saw and the patch it wrote. |
 | **Debug Enum** | plugin-form-builder | A field carrying `x-inflow-ui` side by side with the same field without it. They must behave identically. |
+| **Sandboxed Renderers** | plugin-sandbox | One form document served three ways — declarative, Worker, iframe — with plain-JS, Vue and Preact guests. Toggle the theme while one is running; only the `renderer` field differs between them. |
 | **Run Replay** | flow-trace | A captured engine run fed to a tracker one message at a time, with controls to reorder, drop from, and pollute the stream. |
 
 The lab consumes the packages through `workspace:*` — their built entrypoints, exactly as an installed app does — so it exercises the exports map, the types, and `style.css` rather than the source behind them. A packaging mistake shows up there instead of in your app.
@@ -147,6 +149,47 @@ Two things bite people here:
 Actions are resolved by name from the registry, so a schema can never invoke anything you didn't explicitly hand the plugin. A missing name is inert rather than fatal.
 
 All three are live on the lab's Form Preview page — the action log prints each call's `ctx.data` and its patch, the Jira sample's Reload button patches leaves under `connection` while port and TLS survive, and the "Unknown action" sample names something the host never registered.
+
+## @inflowenger/plugin-sandbox
+
+Most plugin dialogs are forms, and `plugin-form-builder` draws those from a schema with
+no code involved. Some are not — a query builder, a diff, a row picker, anything that
+draws. Rather than grow a widget vocabulary in the host for each one, a plugin may name
+a **renderer** on the form document it already serves and ship a module:
+
+```jsonc
+{
+  "jsonschema": "{...}",            // unchanged — still the data contract
+  "jsonui":     "{...}",            // unchanged
+  "renderer":   { "type": "remote", "module": "https://plugin/ui.js" }
+}
+```
+
+Absent, it reads as `jsonforms` and nothing already deployed changes.
+
+The default renderer runs the plugin's code in a **Web Worker** and mirrors the tree it
+builds into your document through [Remote DOM](https://github.com/Shopify/remote-dom).
+The guest has no DOM, no cookies, no storage and no credentials — and because the nodes
+the user ends up looking at are *your* nodes, your stylesheet and your dark mode reach
+them with nothing injected or copied. An `iframe` renderer is available for guests that
+need a real document.
+
+```vue
+<InflowSandboxForm
+  :renderer="form.renderer" :schema="form.schema" :data="value"
+  :plugin-id="pluginId" :call="callPlugin"
+  @update:data="onData" @notification="onNotification"
+>
+  <template #fallback><!-- the plugin's declarative form --></template>
+</InflowSandboxForm>
+```
+
+The fallback slot is not optional in spirit: a plugin whose bundle fails to load must
+still leave its node configurable.
+
+Full evaluation of the alternatives (Remote DOM vs. a sandboxed iframe vs. jsdom), the
+guest API, the element allow-list, and the nine silent failure modes found getting it
+working: [`packages/plugin-sandbox/README.md`](packages/plugin-sandbox/README.md).
 
 ## @inflowenger/flow-trace
 

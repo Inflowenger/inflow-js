@@ -1,0 +1,66 @@
+{
+  "name": "@inflowenger/plugin-sandbox",
+  "version": "0.1.0",
+  "description": "Safe, isolated, theme-inheriting renderer for plugin-served UI \u2014 the `renderer` half of the Inflow @form protocol",
+  "type": "module",
+  "module": "./dist/index.js",
+  "types": "./dist/index.d.ts",
+  "exports": {
+    ".": {
+      "types": "./dist/index.d.ts",
+      "import": "./dist/index.js"
+    },
+    "./guest": {
+      "types": "./dist/guest/sdk.d.ts",
+      "import": "./dist/guest.js"
+    },
+    "./style.css": "./dist/style.css"
+  },
+  "files": [
+    "dist"
+  ],
+  "scripts": {
+    "build": "pnpm run generate && vite build",
+    "dev": "pnpm run generate && vite build --watch",
+    "typecheck": "pnpm run generate && vue-tsc --noEmit",
+    "test": "vitest run",
+    "generate": "GUEST=frame vite build --config vite.guests.config.ts && GUEST=worker vite build --config vite.guests.config.ts && node scripts/build-guests.mjs"
+  },
+  "peerDependencies": {
+    "vue": "^3.3.0"
+  },
+  "dependencies": {
+    "@remote-dom/core": "^1.12.1",
+    "@remote-dom/polyfill": "^1.7.0",
+    "@quilted/threads": "^4.1.0"
+  },
+  "devDependencies": {
+    "@vitejs/plugin-vue": "^6.0.6",
+    "@vue/test-utils": "^2.4.11",
+    "happy-dom": "^20.11.1",
+    "typescript": "~6.0.2",
+    "vite": "^8.0.12",
+    "vite-plugin-dts": "^4.5.4",
+    "vitest": "^2.1.9",
+    "vue": "^3.5.34",
+    "vue-tsc": "^3.2.8"
+  },
+  "keywords": [
+    "inflow",
+    "sandbox",
+    "remote-dom",
+    "plugin",
+    "vue3",
+    "iframe",
+    "isolation"
+  ],
+  "license": "MIT",
+  "publishConfig": {
+    "access": "public"
+  },
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/Inflowenger/inflow-js.git",
+    "directory": "packages/plugin-sandbox"
+  }
+}

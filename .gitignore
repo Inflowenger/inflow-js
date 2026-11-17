@@ -3,6 +3,18 @@ dist
 test-dist
 *.tsbuildinfo
 
+# Build output that is regenerated, not authored.
+#
+# plugin-sandbox compiles its two guest bootstraps and inlines them as text
+# (see packages/plugin-sandbox/scripts/build-guests.mjs). That is ~95 kB of
+# machine-written TypeScript which would otherwise land in every diff that
+# touched the guest. `pnpm build` and `pnpm typecheck` both regenerate it.
+packages/plugin-sandbox/build/
+packages/plugin-sandbox/src/generated/
+
+# The lab's guest bundles are built from lab/guests by `pnpm build:guests`.
+lab/public/guests/
+
 # Logs
 *.log
 npm-debug.log*
