@@ -1,6 +1,6 @@
 {
   "name": "@inflowenger/plugin-sandbox",
-  "version": "0.1.0",
+  "version": "0.1.1",
   "description": "Safe, isolated, theme-inheriting renderer for plugin-served UI \u2014 the `renderer` half of the Inflow @form protocol",
   "type": "module",
   "module": "./dist/index.js",
